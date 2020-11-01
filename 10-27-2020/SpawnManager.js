@@ -15,7 +15,7 @@ var SpawnManager =
             {
                 var normalSpawn = Game.rooms[i].find(FIND_MY_SPAWNS, {filter: s => (s.name.startsWith("Spawn"))})[0];
                 if(!normalSpawn)
-                    normalSpawn = Game.rooms[i].find(FIND_MY_SPAWNS)[0];
+                    normalSpawn = Game.rooms[i].find(FIND_MY_SPAWNS, {filter: s => (!s.spawnCooldownTime)})[0];
                 if(normalSpawn)
                     this.SpawnNormal(normalSpawn);
             }
@@ -132,6 +132,14 @@ var SpawnManager =
             body.push(HEAL);
         return body;
     },
+	BuildCost: function(body)
+	{
+		var toReturn = 0;
+		for(var i in body)
+			toReturn += BODYPART_COST[body[i]];
+		
+		return toReturn;
+	},
     SelectBody: function(energyAvailable, buildBodies)
     {
         //Pre-sort bodies by decending cost
@@ -153,7 +161,7 @@ var SpawnManager =
         
         return toReturn;
     },
-    GlobalCreeps: function(role)
+    GlobalCreeps: function()
     {
         var toReturn = [];
         for(var i in Game.creeps)
@@ -165,10 +173,10 @@ var SpawnManager =
     },
     SpawnScout: function(roomName, proxyTargetName)
     {
-        var normalSpawn = Game.rooms[roomName].find(FIND_MY_SPAWNS, {filter: s => (s.name.startsWith("Spawn"))})[0];
+        var normalSpawn = Game.rooms[roomName].find(FIND_MY_SPAWNS, {filter: s => (s.name.startsWith("Spawn") && !s.spawnCooldownTime)})[0];
         if(!normalSpawn)
             normalSpawn = Game.rooms[roomName].find(FIND_MY_SPAWNS)[0];
-        if(normalSpawn && !this.GlobalCreepsByRole('scout').filter(c => (c.memory.proxyTarget == proxyTargetName)).length)
+        if(normalSpawn && !this.GlobalCreeps().filter(c => (c.memory.role == 'scout' && c.memory.proxyTarget == proxyTargetName && (c.memory.isWorking !== false|| (c.memory.isWorking === false && c.room.name == c.memory.proxyTarget)))).length)
         {
             this.SpawnCreep(normalSpawn, 'scout', [MOVE], {proxyTarget: proxyTargetName});
         }

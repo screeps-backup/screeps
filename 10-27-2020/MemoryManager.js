@@ -4,14 +4,15 @@ var MemoryManager =
     run: function()
     {
         Memory;
-        for(var i in Game.creeps)
+        for(var i in Memory.creeps)
         {
             if(!Game.creeps[i])
             {
                 delete Memory.creeps[i];
             }else 
             {
-                if((Game.creeps[i].memory.civMovingTicks && Game.creeps[i].memory.civMovingTicks - Game.time < -2) | (Game.creeps[i].memory.civMovingTicks && Game.creeps[i].memory.civMovingTicks - Game.time < 0 && (Game.creeps[i].memory.civPath && !Game.creeps[i].memory.civPath.length)))
+				//If you've stopped moving for 2 ticks or have an empty path for more than 1 tick
+                if((Game.creeps[i].memory.civMovingTicks && Game.creeps[i].memory.civMovingTicks - Game.time < -2) | (Game.creeps[i].memory.civMovingTicks && Game.creeps[i].memory.civMovingTicks - Game.time < -1 && (Game.creeps[i].memory.civPath && !Game.creeps[i].memory.civPath.length)))
                 {
                     delete Game.creeps[i].memory.civMovingTicks;
                     delete Game.creeps[i].memory.civPath;

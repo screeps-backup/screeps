@@ -1,5 +1,7 @@
 var creepRole = require('CreepRole');
 
+var linkManager = require("LinkManager");
+
 var CreepRoleLoader = Object.create(creepRole);
 CreepRoleLoader.IsWorking = function(creep)
 {
@@ -28,6 +30,13 @@ CreepRoleLoader.WorkTarget = function(creep)
     {
         if(!target)
             target = creep.pos.findClosestByRange(FIND_MY_STRUCTURES, {filter: s => (s.structureType == STRUCTURE_TOWER && s.store.getFreeCapacity(RESOURCE_ENERGY) >= creep.store.getCapacity())});
+    
+        if(!target)
+    	{
+    	    var loaderLink = linkManager.LoaderLink(creep.room);
+    	    if(loaderLink && loaderLink.store.getFreeCapacity(RESOURCE_ENERGY) > 0)
+    		    target = loaderLink;
+    	}
     }
     
         

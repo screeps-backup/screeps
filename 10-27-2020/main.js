@@ -1,9 +1,11 @@
 
+var cpuCounter = require("CPUCounter");
 var memoryManager = require("MemoryManager");
 var safeModeManager = require("SafeModeManager");
 var spawnManager = require("SpawnManager");
 var towerManager = require("TowerManager");
 var defenderManager = require("DefenderManager");
+var proxyDefenderManager = require("ProxyDefenderManager");
 var buildManager = require("BuildManager");
 var autoBuildManager = require("AutoBuildManager");
 var autoBuildWallsManager = require("AutoBuildWallsManager");
@@ -21,6 +23,7 @@ var healerManager = require("HealerManager");
 var baseBasherManager = require("BaseBasherManager");
 var demolisherManager = require("DemolisherManager");
 var alertManager = require("AlertManager");
+var linkManager = require("LinkManager");
 
 var creepRole = require("CreepRole");
 
@@ -35,6 +38,7 @@ var creepRoleScout = require("CreepRoleScout");
 var creepRoleMilitary = require("CreepRoleMilitary");
 
 var creepRoleDefender = require("CreepRoleDefender");
+var creepRoleProxyDefender = require("CreepRoleProxyDefender");
 var creepRoleBaseBasher = require("CreepRoleBaseBasher");
 var creepRoleDemolisher = require("CreepRoleDemolisher");
 var creepRoleHealer = require("CreepRoleHealer");
@@ -76,6 +80,9 @@ var RunCreep = function(creep)
         case 'defender':
             creepRoleDefender.run(creep);
             break;
+		case 'proxyDefender':
+			creepRoleProxyDefender.run(creep);
+			break;
         case 'demolisher':
             creepRoleDemolisher.run(creep);
             break;
@@ -112,11 +119,14 @@ var RunCreep = function(creep)
 module.exports.loop = function ()
 {
 
+	cpuCounter.run();
+	
     memoryManager.run();
 	safeModeManager.run();
     spawnManager.run();
     towerManager.run();
     defenderManager.run();
+	proxyDefenderManager.run();
 	buildManager.run();
     autoBuildManager.run();
     autoBuildRubbleManager.run();
@@ -134,7 +144,10 @@ module.exports.loop = function ()
     baseBasherManager.run();
     demolisherManager.run();
     alertManager.run();
-
+	linkManager.run();
+	
+	cpuCounter.StartCount("All Creeps");
     for(var name in Game.creeps)
         RunCreep(Game.creeps[name]);
+    cpuCounter.EndCount("All Creeps");
 }

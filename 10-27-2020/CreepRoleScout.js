@@ -19,7 +19,7 @@ CreepRoleScout.IsWorking = function(creep)
     var isWorking = !(creep.room.name === creep.memory.proxyTarget && (creep.pos.x > 2 && creep.pos.y > 2 && creep.pos.x < 47 && creep.pos.y < 47));
 	if(isWorking == false)
 		creep.memory.isWorking = false;
-	else
+	else if(creep.room.name == creep.memory.proxyTarget)
 	    creep.AvoidEdges();
 	return isWorking;
 }

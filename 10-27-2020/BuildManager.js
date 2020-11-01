@@ -24,4 +24,4 @@ var BuildManager =
 
 BuildManager.SetBuildTicks();
 
-modile.exports = BuildManager;
+module.exports = BuildManager;

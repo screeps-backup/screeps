@@ -1,6 +1,8 @@
 var CreepBody = require('CreepBody');
 var SpawnManager = require('SpawnManager');
 var OutpostManager = require('OutpostManager');
+var defenderManager = require("DefenderManager");
+var proxyDefenderManager = require("ProxyDefenderManager");
 
 var ProxyMinerManager = 
 {
@@ -10,13 +12,13 @@ var ProxyMinerManager =
         {
             for(var r in Game.rooms)
             {
-                if(Game.rooms[r].controller && Game.rooms[r].controller.my && Game.rooms[r].controller.level >= 4 && SpawnManager.normalSpawnDone[r] == true)
+                if(Game.rooms[r].controller && Game.rooms[r].controller.my && Game.rooms[r].controller.level >= 4 && SpawnManager.normalSpawnDone[r] == true && defenderManager.SpawnDone(r) == true && proxyDefenderManager.SpawnRoomDone(r) == true)
                 {
                     for(var o in Memory.outpostNames[r])
                     {
                         if(Game.rooms[Memory.outpostNames[r][o]])
                         {
-                            var normalSpawn = Game.rooms[r].find(FIND_MY_SPAWNS, {filter: s => (s.name.startsWith("Spawn"))})[0];
+                            var normalSpawn = Game.rooms[r].find(FIND_MY_SPAWNS, {filter: s => (s.name.startsWith("Spawn") && !s.spawnCooldownTime)})[0];
                             if(normalSpawn && SpawnManager.GlobalCreepsByRole('proxyMiner').filter(c => (c.memory.proxyTarget == Memory.outpostNames[r][o])).length < Game.rooms[Memory.outpostNames[r][o]].find(FIND_SOURCES).length)
                             {
                                 var proxyMinerBody = SpawnManager.SelectBody(normalSpawn.room.energyCapacityAvailable, [new CreepBody({numCarry: 1, numMove: 3, numWork: 6}), new CreepBody({numCarry: 1, numMove: 1, numWork: 1})]);

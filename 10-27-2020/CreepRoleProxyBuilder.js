@@ -18,6 +18,20 @@ CreepRoleProxyBuilder.run = function(creep)
 }
 CreepRoleProxyBuilder.WorkTarget = function(creep)
 {
+	if(!creep.room.controller || (creep.room.controller && !creep.room.controller.my))
+	{
+		var toDestroy = creep.room.find(FIND_STRUCTURES, {filter: s => (s.structureType !== STRUCTURE_CONTROLLER && s.structureType !== STRUCTURE_CONTAINER && s.structureType !== STRUCTURE_ROAD)});
+		if(toDestroy.length)
+		{
+			closestDestroy = creep.pos.findClosestByRange(toDestroy);
+			if(creep.pos.inRangeTo(closestDestroy, 1))
+				creep.dismantle(closestDestroy);
+			else
+				creep.CivilianMove(closestDestroy.pos, 1);
+			
+			return null;
+		}
+	}
     var target = Game.getObjectById(creep.memory.workTargetID);
     if(target && target.room.name == creep.room.name && (!target.hits || (target.hits && target.hits < target.hitsMax)))
         return target;

@@ -21,10 +21,10 @@ CreepRoleReserver.Work = function(creep, target)
 {
 	if(creep.pos.inRangeTo(target, 1))
 	{
-		if((!target.owner || (target.owner && !target.owner.username)) || target.my)
+		if((!target.reservation || (target.reservation && target.reservation.username !== 'Invader')))
 		{
 			creep.reserveController(target);
-		}else if(!creep.room.controller.my)
+		}else
 		{
 			creep.attackController(target);
 		}

@@ -6,7 +6,7 @@ CreepRoleDefender.WorkTarget = function(creep)
 {
     if(creep.memory.defend === true)
     {
-        return creep.pos.findClosestByPath(FIND_HOSTILE_CREEPS, {filter: c => (c.body.length > 1)});
+        return creep.pos.findClosestByRange(FIND_HOSTILE_CREEPS, {filter: c => (c.body.length > 1)});
     }else
     {
         if(!this.OffTarget(creep) || (this.OffTarget(creep) && creep.room.find(FIND_MY_CREEPS, {filter: c => (c.memory.role == creep.memory.role && c.pos.inRangeTo(this.OffTarget(creep).pos, 4))}).length >= 3))

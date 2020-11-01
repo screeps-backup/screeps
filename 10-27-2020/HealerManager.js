@@ -28,7 +28,9 @@ var HealerManager =
 					
 					if(creepsToHeal.length)
 					{
-                        var normalSpawn = Game.rooms[r].find(FIND_MY_SPAWNS, {filter: s => (s.name.startsWith("Spawn"))})[0];
+                        var normalSpawn = Game.rooms[r].find(FIND_MY_SPAWNS, {filter: s => (s.name.startsWith("Military" && !s.spawnCooldownTime))})[0] || null;
+                        if(!normalSpawn)
+                            normalSpawn = Game.rooms[r].find(FIND_MY_SPAWNS, {filter: s => (!s.spawnCooldownTime)})[0] || null
                         if(normalSpawn)
                         {
                             var healerBody = SpawnManager.SelectBody(normalSpawn.room.energyCapacityAvailable, [new CreepBody({numMove: 4, numHeal: 4}), new CreepBody({numMove: 1, numHeal: 1})]);

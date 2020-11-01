@@ -146,6 +146,12 @@ Creep.prototype.Garrison = function(targetAllies, endProxyTarget)
 	if(this.memory.garrisoned !== false)
 		return true;
 	
+	if(!targetAllies)
+	{
+		this.AvoidEdges();
+		return false;
+	}
+	
 	//If you're still waiting for a healer, stop.
 	if(this.AllignWithHealer() === true)
 	{

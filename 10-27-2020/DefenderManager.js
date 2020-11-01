@@ -21,9 +21,9 @@ var DefenderManager =
                     if(AlertManager.OnAlert(r) == true | Game.rooms[r].find(FIND_HOSTILE_CREEPS, {filter: c => (c.body.length > 1)}).length)
                     {
                         
-                        var militarySpawn = Game.rooms[r].find(FIND_MY_SPAWNS, {filter: s => (s.name.startsWith("Military"))})[0];
+                        var militarySpawn = Game.rooms[r].find(FIND_MY_SPAWNS, {filter: s => (s.name.startsWith("Military") && !s.spawnCooldownTime)})[0];
                         if(!militarySpawn)
-                            militarySpawn = Game.rooms[r].find(FIND_MY_SPAWNS)[0];
+                            militarySpawn = Game.rooms[r].find(FIND_MY_SPAWNS, {filter: s => (!s.spawnCooldownTime)})[0];
                         
                         if(militarySpawn)
                         {
@@ -66,6 +66,7 @@ var DefenderManager =
 		
 		return true;
 	}
+	
 }
 DefenderManager.defendersSpawnDone = [];
 

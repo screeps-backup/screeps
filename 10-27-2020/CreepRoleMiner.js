@@ -6,7 +6,11 @@ CreepRoleMiner.IsWorking = function(creep)
     if(creep.memory.isWorking === true)
     {
         if(_.sum(creep.store) == creep.store.getCapacity())
-            creep.memory.isWorking = false;
+        {
+            var offTarget = this.OffTarget(creep);
+            if(!offTarget || (offTarget && ((offTarget instanceof ConstructionSite) | !creep.pos.inRangeTo(offTarget, 0))))
+                creep.memory.isWorking = false;
+        }
     }else
     {
         if(_.sum(creep.store) == 0)
@@ -78,12 +82,15 @@ CreepRoleMiner.OffTarget = function(creep)
 }
 CreepRoleMiner.OffWork = function(creep, target)
 {
-    if(creep.pos.inRangeTo(target, 1))
+    if((target instanceof ConstructionSite) && creep.pos.inRangeTo(target, 3))
     {
-        if(target instanceof ConstructionSite)
-            creep.build(target);
-        else
-            creep.transfer(target, RESOURCE_ENERGY);
+        creep.build(target);
+    }else if(!(target instanceof StructureContainer) && creep.pos.inRangeTo(target, 1))
+    {
+        creep.transfer(target, RESOURCE_ENERGY);
+    }else if((target instanceof StructureContainer) && creep.pos.inRangeTo(target, 0))
+    {
+        creep.transfer(target, RESOURCE_ENERGY);
     }else
     {
         creep.CivilianMove(target.pos, 0);

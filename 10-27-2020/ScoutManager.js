@@ -6,7 +6,7 @@ var ScoutManager =
 {
     run: function()
     {
-        if (Game.time % 10 == 0)
+        if(Game.time % 10 == 0)
         {
             for(var r in Game.rooms)
             {

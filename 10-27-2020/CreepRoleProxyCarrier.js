@@ -68,6 +68,9 @@ CreepRoleProxyCarrier.OffTarget = function(creep)
         }
     }
     
+    if(!target)
+        creep.AvoidEdges();
+    
         
     if(target)
     {

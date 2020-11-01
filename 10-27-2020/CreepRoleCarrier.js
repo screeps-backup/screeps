@@ -1,5 +1,7 @@
 var creepRole = require('CreepRole');
 
+var linkManager = require('LinkManager');
+
 var CreepRoleCarrier = Object.create(creepRole);
 CreepRoleCarrier.IsWorking = function(creep)
 {
@@ -22,12 +24,19 @@ CreepRoleCarrier.WorkTarget = function(creep)
     
     target = null;
     
-    if(!creep.room.find(FIND_MY_CREEPS, {filter: c => (c.memory.role == 'carrier')}).length)
+    if(!creep.room.find(FIND_MY_CREEPS, {filter: c => (c.memory.role === 'loader')}).length)
         target = creep.pos.findClosestByRange(FIND_MY_STRUCTURES, {filter: s => ((s.structureType === STRUCTURE_EXTENSION && s.energy < s.energyCapacity) || (s.structureType === STRUCTURE_SPAWN && s.store[RESOURCE_ENERGY] < s.store.getCapacity(RESOURCE_ENERGY)))});
     
     if(!target)
         target = creep.pos.findClosestByRange(FIND_MY_STRUCTURES, {filter: s => (s.structureType == STRUCTURE_TOWER && s.store.getFreeCapacity(RESOURCE_ENERGY) >= creep.store[RESOURCE_ENERGY])});
     
+	if(!target)
+	{
+	    var loaderLink = linkManager.LoaderLink(creep.room);
+	    if(loaderLink && loaderLink.store.getFreeCapacity(RESOURCE_ENERGY) > 0)
+		    target = loaderLink;
+	}
+	
     if(!target)
         target = creep.pos.findClosestByRange(FIND_STRUCTURES, {filter: s => (s.structureType === STRUCTURE_CONTAINER && s.pos.findInRange(FIND_STRUCTURES, 1, {filter: a => (a.structureType === STRUCTURE_CONTROLLER)}).length && s.store.getFreeCapacity(RESOURCE_ENERGY) >= creep.store[RESOURCE_ENERGY])});
     
@@ -73,13 +82,22 @@ CreepRoleCarrier.OffTarget = function(creep)
     target = null;
     
     
-    var mineContainers = creep.room.find(FIND_STRUCTURES, {filter: s => (s.structureType === STRUCTURE_CONTAINER && s.store[RESOURCE_ENERGY] > 0 && s.pos.findInRange(FIND_SOURCES, 1).length)});
+    var mineContainers = creep.room.find(FIND_STRUCTURES, {filter: s => (s.structureType === STRUCTURE_CONTAINER && s.store[RESOURCE_ENERGY] > creep.store.getCapacity(RESOURCE_ENERGY) && s.pos.findInRange(FIND_SOURCES, 1).length)});
     mineContainers = _.sortBy(mineContainers, m => m.store[RESOURCE_ENERGY]);
     if(mineContainers.length)
         target = mineContainers[mineContainers.length - 1];
     
     if(!target)
-        target = creep.pos.findClosestByRange(FIND_STRUCTURES, {filter: s => (((s.structureType === STRUCTURE_CONTAINER && !s.pos.findInRange(FIND_STRUCTURES, 1, {filter: a => (a.structureType === STRUCTURE_CONTROLLER)}).length) || s.structureType === STRUCTURE_STORAGE) && s.store[RESOURCE_ENERGY] > 0)});
+        target = creep.pos.findClosestByRange(FIND_STRUCTURES, {filter: s => ( s.structureType === STRUCTURE_CONTAINER && !s.pos.findInRange(FIND_STRUCTURES, 1, {filter: a => (a.structureType === STRUCTURE_CONTROLLER)}).length && s.store[RESOURCE_ENERGY] >= creep.store.getCapacity(RESOURCE_ENERGY))});
+        
+    if(!target)
+    {
+        if(creep.room.storage && creep.room.storage.store[RESOURCE_ENERGY] >= 200000)
+            target = creep.room.storage;
+    }
+    
+    if(!target)
+        target = creep.pos.findClosestByRange(FIND_STRUCTURES, {filter: s => ( s.structureType === STRUCTURE_CONTAINER && !s.pos.findInRange(FIND_STRUCTURES, 1, {filter: a => (a.structureType === STRUCTURE_CONTROLLER)}).length && s.store[RESOURCE_ENERGY] > 0)});
     
     if(target)
     {

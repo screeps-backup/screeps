@@ -18,7 +18,7 @@ var OneMinerManager =
 					{
 						if(Game.rooms[Memory.outpostNames[r][o]])
 						{
-							var normalSpawn = Game.rooms[r].find(FIND_MY_SPAWNS, {filter: s => (s.name.startsWith("Spawn"))})[0];
+							var normalSpawn = Game.rooms[r].find(FIND_MY_SPAWNS, {filter: s => (s.name.startsWith("Spawn") && !s.spawnCooldownTime)})[0];
 							if(normalSpawn && SpawnManager.GlobalCreepsByRole('oneMiner').filter(c => (c.memory.proxyTarget == Memory.outpostNames[r][o])).length < Game.rooms[Memory.outpostNames[r][o]].find(FIND_SOURCES).length * 2)
 							{
 								var oneMinerBody = SpawnManager.SelectBody(normalSpawn.room.energyCapacityAvailable, [new CreepBody({numCarry: 2, numMove: 4, numWork: 2}), new CreepBody({numCarry: 1, numMove: 2, numWork: 1})]);

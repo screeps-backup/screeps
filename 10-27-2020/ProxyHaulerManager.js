@@ -2,6 +2,7 @@ var CreepBody = require('CreepBody');
 var SpawnManager = require('SpawnManager');
 var OutpostManager = require('OutpostManager');
 var defenderManager = require('DefenderManager');
+var proxyDefenderManager = require("ProxyDefenderManager");
 
 var ProxyHaulerManager = 
 {
@@ -14,9 +15,9 @@ var ProxyHaulerManager =
         {
             for(var r in Game.rooms)
             {
-                if(Game.rooms[r].controller && Game.rooms[r].controller.my && Game.rooms[r].controller.level >= 4 && this.numHaulers[r] && this.numHaulers[r] > 0 && SpawnManager.normalSpawnDone[r] == true && defenderManager.SpawnDone(r) == true)
+                if(Game.rooms[r].controller && Game.rooms[r].controller.my && Game.rooms[r].controller.level >= 4 && this.numHaulers[r] && this.numHaulers[r] > 0 && SpawnManager.normalSpawnDone[r] == true && defenderManager.SpawnDone(r) == true && proxyDefenderManager.SpawnRoomDone(r) == true)
                 {
-                    var normalSpawn = Game.rooms[r].find(FIND_MY_SPAWNS, {filter: s => (s.name.startsWith("Spawn"))})[0];
+                    var normalSpawn = Game.rooms[r].find(FIND_MY_SPAWNS, {filter: s => (s.name.startsWith("Spawn") && !s.spawnCooldownTimes)})[0];
                     if(normalSpawn && SpawnManager.GlobalCreepsByRole('proxyCarrier').filter(c => (c.memory.spawnRoom == r && !SpawnManager.DueToDie(c))).length < this.numHaulers[r])
                     {
                         var proxyHaulerBody = SpawnManager.SelectBody(normalSpawn.room.energyCapacityAvailable, [new CreepBody({numCarry: 16, numMove: 8}), new CreepBody({numCarry: 10, numMove: 5})]);

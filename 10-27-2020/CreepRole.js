@@ -44,7 +44,7 @@ Creep.prototype.AvoidEdges = function()
 	if(this.pos.x <= 5 | this.pos.x >= 44 | this.pos.y <= 5 | this.pos.y >= 44 | (this.room.controller && this.room.controller.my && this.pos.findInRange(FIND_MY_SPAWNS, 5).length))
 	{
 		//Move towards the center of the room
-		this.moveTo(new RoomPosition(25, 25, this.room.name));
+		this.CivilianMove(new RoomPosition(25, 25, this.room.name));
 		return true;
 	}
 	
@@ -64,16 +64,16 @@ Creep.prototype.PathBlocked = function()
 {
 	//let it be noted that this doesn't work with inter-room travel
 	if(!this.memory.civPath || (this.memory.civPath && !this.memory.civPath.length))
-		return null;
+		return false;
 	
 	var moveOffset = this.moveOffsets[this.memory.civPath[0]];
 	if(!(moveOffset instanceof Array) || (moveOffset instanceof Array && !moveOffset.length))
-	    return null;
+	    return false;
 	var checkPos = new RoomPosition(Math.min(Math.max(this.pos.x + moveOffset[0], 0), 49), Math.min(Math.max(this.pos.y + moveOffset[1], 0), 49), this.room.name);
 	//I'm wagering this civMove will rarely encounter hostiles since military units have a different pathfinder
 	//New construction sites will only appear when playing or a wall is destroyed
 		//The walls are self regeneratog so that opening will be very temporary gameplay is rare
-	if(checkPos.findInRange(FIND_MY_CREEPS, {filter: c => (c.memory.civMovingTicks == undefined | c.fatigue !== 0)}, 0).length)
+	if(checkPos.findInRange(FIND_MY_CREEPS, 0, {filter: c => (!c.memory.civMovingTicks | c.fatigue !== 0)}).length)
 		return true;
 	
 	//If there's a possibility of crashing into an ally than presume you will and recalculate
@@ -82,7 +82,7 @@ Creep.prototype.PathBlocked = function()
 	{
 		moveOffset = this.moveOffsets[this.memory.civPath[1]];
 		if(!(moveOffset instanceof Array) || (moveOffset instanceof Array && !moveOffset.length))
-	        return null;
+	        return false;
 		checkPos = new RoomPosition(Math.min(Math.max(checkPos.x + moveOffset[0], 0), 49), Math.min(Math.max(checkPos.y + moveOffset[1], 0), 49), checkPos.roomName);
 		//Presume all creeps are moving towards you since there's barely any stationary creeps in civlian paths
 			//This is because all stationary creeps are avoided at the begining of the calculation
@@ -97,16 +97,16 @@ Creep.prototype.CivilianMove = function(targetPos, range=1, maxSaveMoves=5)
 	if(!targetPos)
 		return;
 	
+	
 	if(this.room.name !== targetPos.roomName | !this.pos.inRangeTo(targetPos, range))
 	{
 		//The timestamp used to allow civMove to timeout when not used
 		this.memory.civMovingTicks = Game.time;
 	}
 	  
-	  if(this.PathBlocked() == true)
-		 delete this.memory.civPath; 
+	  var blocked = this.PathBlocked();
 	 
-	  if(!this.pos.inRangeTo(targetPos, range) && (!this.memory.civPath || (this.memory.civPath && !this.memory.civPath.length)))
+	  if(blocked == true | (!this.pos.inRangeTo(targetPos, range) && (!this.memory.civPath || (this.memory.civPath && !this.memory.civPath.length))))
 	  {
 		  let ret = PathFinder.search(
 		this.pos, {pos: targetPos, range: range},
@@ -154,7 +154,16 @@ Creep.prototype.CivilianMove = function(targetPos, range=1, maxSaveMoves=5)
 					room.find(FIND_HOSTILE_CREEPS).forEach(function(c){
 						costs.set(c.pos.x, c.pos.y, 0xff);
 					});
-					room.find(FIND_MY_CREEPS, {filter: c => (!c.memory.civMovingTicks | c.fatigue !== 0)}).forEach(function(c){
+					room.find(FIND_HOSTILE_CREEPS, {filter: c => (c.owner.username === 'Source Keeper')}).forEach(function(c){
+						for(var x = -3; x < 3; x++)
+						{
+							for(var y = -3; y < 3; y++)
+							{
+								costs.set(c.pos.x + x, c.pos.y + y, 0xff);
+							}
+						}
+					});
+					room.find(FIND_MY_CREEPS, {filter: c => ((blocked == true && c.pos.inRangeTo(this, 1)) | c.memory.civMovingTicks === undefined | c.fatigue !== 0)}).forEach(function(c){
 						costs.set(c.pos.x, c.pos.y, 0xff);
 					});
 				}
@@ -167,24 +176,34 @@ Creep.prototype.CivilianMove = function(targetPos, range=1, maxSaveMoves=5)
 		
 		  var lastPos = this.pos;
 		  //Save the current path to a max # of 
-		  this.memory.civPath = [];
+		  var newPath = [];
 		  var pathEndLength = Math.min(ret.path.length, maxSaveMoves);
 		  for(var i = 0; i < pathEndLength; i++)
 		  {
-			  this.memory.civPath.push(lastPos.getDirectionTo(ret.path[i]));
+			  newPath.push(lastPos.getDirectionTo(ret.path[i]));
 			  lastPos = ret.path[i];
 		  }
+		  this.memory.civPath = newPath;
+		  if(newPath && newPath.length)
+    	  {
+    	      if(this.fatigue == 0)
+    	      {
+    	          this.move(this.memory.civPath[0]);
+        	       this.memory.civPath.shift();
+    	      }
+        	   
+        	  return;
+    	  }
 	  }
 	  
 	  if(this.memory.civPath && this.memory.civPath.length)
 	  {
-		if(this.move(this.memory.civPath[0]) == OK)
-		{
-    		//Presumes that the movement worked since we check if it's blocked before
-    		this.memory.civPath.shift();
-		}
+	      if(this.fatigue == 0)
+	      {
+	          this.move(this.memory.civPath[0]);
+    	   this.memory.civPath.shift();
+	      }
 	  }
-	
 }
 Creep.prototype.CivilianExitMove = function(targetRoomName=null)
 {
@@ -203,9 +222,12 @@ Creep.prototype.CivilianExitMove = function(targetRoomName=null)
 	if(this.memory.civExitPos)
 	{
 		this.CivilianMove(this.memory.civExitPos, 0);
+		
 		//Wager that you'll actually exit next turn since colisions on edges are rare
 		if(this.pos.inRangeTo(this.memory.civExitPos, 1))
+		{
 			delete this.memory.civExitPos;
+		}
 	}
 }
 Creep.prototype.RunAway = function()

@@ -17,7 +17,7 @@ var DemolisherManager =
                     for(var i in Memory.militaryFlagNames['demolish'])
                     {
                         var normalSpawn = Game.rooms[r].find(FIND_MY_SPAWNS, {filter: s => (s.name.startsWith("Spawn"))})[0];
-                        if(normalSpawn && !SpawnManager.GlobalCreepsByRole('demolisher').filter(c => (c.memory.proxyTarget == Memory.militaryFlagNames['demolish'][i])).length)
+                        if(normalSpawn && !normalSpawn.spawnCooldownTime && !SpawnManager.GlobalCreepsByRole('demolisher').filter(c => (c.memory.proxyTarget == Memory.militaryFlagNames['demolish'][i])).length)
                         {
                             var demolisherBody = SpawnManager.SelectBody(normalSpawn.room.energyCapacityAvailable, [new CreepBody({numMove: 8, numWork: 8})]);
                             if(demolisherBody)
@@ -27,7 +27,7 @@ var DemolisherManager =
                     for(var i in Memory.militaryFlagNames['attackDemolish'])
                     {
                         var normalSpawn = Game.rooms[r].find(FIND_MY_SPAWNS, {filter: s => (s.name.startsWith("Spawn"))})[0];
-                        if(normalSpawn && !SpawnManager.GlobalCreepsByRole('demolisher').filter(c => (c.memory.proxyTarget == Memory.militaryFlagNames['attackDemolish'][i])).length)
+                        if(normalSpawn && !normalSpawn.spawnCooldownTime && !SpawnManager.GlobalCreepsByRole('demolisher').filter(c => (c.memory.proxyTarget == Memory.militaryFlagNames['attackDemolish'][i])).length)
                         {
                             var demolisherBody = SpawnManager.SelectBody(normalSpawn.room.energyCapacityAvailable, [new CreepBody({numMove: 7, numAttack: 7})]);
                             if(demolisherBody)
