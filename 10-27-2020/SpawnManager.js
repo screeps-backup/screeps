@@ -5,6 +5,8 @@
 var CreepBody = require("CreepBody");
 var AlertManager = require("AlertManager");
 
+var normalUpgraderBodies = [new CreepBody({numWork: 3, numCarry: 2, numMove: 3}), new CreepBody({numWork: 1, numCarry: 1, numMove: 2})];
+
 var SpawnManager = 
 {
     run: function()
@@ -30,29 +32,30 @@ var SpawnManager =
         
         this.normalSpawnDone[spawn.room.name] = false;
         
-        if(spawn.room.find(FIND_MY_CREEPS, {filter: c => (c.memory.role == 'miner')}).length == 0 && spawn.room.find(FIND_MY_CREEPS, {filter: c => (c.memory.role == 'carrier')}).length == 0)
+        if(spawn.room.find(FIND_MY_CREEPS, {filter: c => (c.memory.role == 'carrier')}).length == 0)
         {
-            this.SpawnCreep(spawn, 'miner', [WORK, CARRY, MOVE, MOVE]);
+            if(spawn.room.storage && spawn.room.storage.store[RESOURCE_ENERGY] >= spawn.room.energyCapacityAvailable + 300)
+            {
+                if(!spawn.room.find(FIND_MY_CREEPS, {filter: c => (c.memory.role === 'loader')}).length)
+                    this.SpawnCreep(spawn, 'loader', [CARRY, CARRY, CARRY, MOVE, MOVE, MOVE]);
+            }else
+            {
+                if(!spawn.room.find(FIND_MY_CREEPS, {filter: c => (c.memory.role == 'miner')}).length)
+                    this.SpawnCreep(spawn, 'miner', [WORK, CARRY, MOVE, MOVE]);
+            }
             return;
         }
         
         if(spawn.room.find(FIND_MY_CREEPS, {filter: c => (c.memory.role == 'miner' && !this.DueToDie(c))}).length < spawn.room.find(FIND_SOURCES).length)
         {
-            var minerBody = this.SelectBody(spawn.room.energyCapacityAvailable, [new CreepBody({numWork: 5, numCarry: 1, numMove: 3}), new CreepBody({numWork: 3, numCarry: 1, numMove: 2}), new CreepBody({numWork: 2, numCarry: 1, numMove: 1})]);
+            var minerBody = this.SelectBody(spawn.room.energyCapacityAvailable, [new CreepBody({numWork: 5, numCarry: 1, numMove: 3}), new CreepBody({numWork: 4, numCarry: 1, numMove: 1}), new CreepBody({numWork: 2, numCarry: 1, numMove: 1})]);
             this.SpawnCreep(spawn, 'miner', minerBody);
         }else
         {
-            if(!spawn.room.find(FIND_MY_CREEPS, {filter: c => (c.memory.role == 'carrier' && !this.DueToDie(c))}).length)
+            if(spawn.room.find(FIND_MY_CREEPS, {filter: c => (c.memory.role == 'carrier' && !this.DueToDie(c))}).length < 2)
             {
-                if(spawn.room.controller.level >= 4 && spawn.room.storage && spawn.room.storage.store[RESOURCE_ENERGY] >= 300000)
-				{
-                    var carrierBody = this.SelectBody(spawn.room.energyCapacityAvailable, [new CreepBody({numCarry: 16, numMove: 8}), new CreepBody({numCarry: 10, numMove: 5}), new CreepBody({numCarry: 5, numMove: 5}), new CreepBody({numCarry: 3, numMove: 3})]);
-                    this.SpawnCreep(spawn, 'carrier', carrierBody);
-				}else
-				{
-				    var carrierBody = this.SelectBody(spawn.room.energyCapacityAvailable, [new CreepBody({numCarry: 10, numMove: 5}), new CreepBody({numCarry: 5, numMove: 5}), new CreepBody({numCarry: 3, numMove: 3})]);
+			    var carrierBody = this.SelectBody(spawn.room.energyCapacityAvailable, [new CreepBody({numCarry: 16, numMove: 5}), new CreepBody({numCarry: 10, numMove: 5}), new CreepBody({numCarry: 5, numMove: 5}), new CreepBody({numCarry: 3, numMove: 3})]);
                 this.SpawnCreep(spawn, 'carrier', carrierBody);
-				}
             }else
             {
                 if(spawn.room.controller.level >= 4 && spawn.room.storage && !spawn.room.find(FIND_MY_CREEPS, {filter: c => (c.memory.role == 'loader' && !this.DueToDie(c))}).length)
@@ -63,20 +66,18 @@ var SpawnManager =
                 {
                     if(spawn.room.find(FIND_MY_CREEPS, {filter: c => (c.memory.role == 'upgrader')}).length < 2)
                     {
-						if(spawn.room.controller.level >= 4 && spawn.room.storage && spawn.room.storage.store[RESOURCE_ENERGY] >= 300000)
+						if(spawn.room.controller.level >= 4 && spawn.room.energyCapacityAvailable >= 1300 && spawn.room.storage && spawn.room.storage.store[RESOURCE_ENERGY] >= 300000)
 						{
-							var upgraderBody = this.SelectBody(spawn.room.energyCapacityAvailable, [new CreepBody({numWork: 10, numCarry: 2, numMove: 2}), new CreepBody({numWork: 3, numCarry: 2, numMove: 2}), new CreepBody({numWork: 1, numCarry: 1, numMove: 2})]);
+							var upgraderBody = this.SelectBody(spawn.room.energyCapacityAvailable, [new CreepBody({numWork: 10, numCarry: 2, numMove: 2})]);
 							this.SpawnCreep(spawn, 'upgrader', upgraderBody);
 						}else
 						{
-							var upgraderBody = this.SelectBody(spawn.room.energyCapacityAvailable, [new CreepBody({numWork: 2, numCarry: 2, numMove: 4}), new CreepBody({numWork: 1, numCarry: 1, numMove: 2})]);
+							var upgraderBody = this.SelectBody(spawn.room.energyCapacityAvailable, normalUpgraderBodies);
 							this.SpawnCreep(spawn, 'upgrader', upgraderBody);
 						}
                     }else
                     {
-                        if((!spawn.room.find(FIND_MY_CONSTRUCTION_SITES).length && spawn.room.find(FIND_MY_CREEPS, {filter: c => (c.memory.role == 'builder')}).length < 1 | 
-                        (spawn.room.controller.level < 3 || (spawn.room.controller >= 3 && ( !spawn.room.find(FIND_MY_STRUCTURES, {filter: s => (s.structureType == STRUCTURE_TOWER)}.length) || (spawn.room.find(FIND_MY_STRUCTURES, {filter: s => (s.structureType == STRUCTURE_TOWER)}.length && spawn.room.find(FIND_MY_CREEPS, {filter: c => (c.memory.role == 'builder')}) < 1)) ))) || 
-                        (spawn.room.find(FIND_MY_CONSTRUCTION_SITES).length && spawn.room.find(FIND_MY_CREEPS, {filter: c => (c.memory.role == 'builder')}).length < 3)))
+                        if((!spawn.room.find(FIND_MY_CONSTRUCTION_SITES).length && spawn.room.find(FIND_MY_CREEPS, {filter: c => (c.memory.role == 'builder')}).length < 1 || ( (spawn.room.find(FIND_MY_CONSTRUCTION_SITES).length && ((AlertManager.OnAlert(spawn.room.name) == true && spawn.room.find(FIND_MY_CREEPS, {filter: c => (c.memory.role == 'builder')}).length < 3) || (AlertManager.OnAlert(spawn.room.name) == false && spawn.room.find(FIND_MY_CREEPS, {filter: c => (c.memory.role == 'builder')}).length < 6))))))
                         {
                             var builderBody = this.SelectBody(spawn.room.energyCapacityAvailable, [new CreepBody({numWork: 3, numCarry: 3, numMove: 6}), new CreepBody({numWork: 2, numCarry: 2, numMove: 4}), new CreepBody({numWork: 1, numCarry: 1, numMove: 2})]);
                             this.SpawnCreep(spawn, 'builder', builderBody);
@@ -89,6 +90,10 @@ var SpawnManager =
                             {
                                 var builderBody = this.SelectBody(spawn.room.energyCapacityAvailable, [new CreepBody({numWork: 4, numCarry: 4, numMove: 8}), new CreepBody({numWork: 2, numCarry: 2, numMove: 4}), new CreepBody({numWork: 1, numCarry: 1, numMove: 2})]);
                                 this.SpawnCreep(spawn, 'builder', builderBody);
+                            }else if(!(spawn.room.controller.level >= 4 && spawn.room.energyCapacityAvailable >= 1300 && spawn.room.storage) && AlertManager.OnAlert(spawn.room.name) == false && !spawn.room.find(FIND_MY_CONSTRUCTION_SITES).length && !Game.flags['BaseBash'] && spawn.room.find(FIND_MY_CREEPS, {filter: c => (c.memory.role == 'builder')}).length < 6 && spawn.room.find(FIND_MY_CREEPS, {filter: c => (c.memory.role == 'upgrader')}).length < 5)
+                            {
+                                var upgraderBody = this.SelectBody(spawn.room.energyCapacityAvailable, normalUpgraderBodies);
+							    this.SpawnCreep(spawn, 'upgrader', upgraderBody);
                             }
                         }
                     }

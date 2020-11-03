@@ -24,9 +24,9 @@ var AlertManager =
     },
     AlertHostileCreepAttack: function(room)
     {
-        if(room.find(FIND_HOSTILE_CREEPS, {filter: c => (c.body.length > 10 && c.owner.username != "Invader")}).length)
+        if(room.find(FIND_HOSTILE_CREEPS, {filter: c => (c.body.length > 1 && c.owner.username != "Invader")}).length)
         {
-            Game.notify("ATTACK AT: " + room.name);
+            Game.notify("ATTACK AT: " + room.name, 30);
             console.log("ATTACK AT: " + room.name);
         }
     },

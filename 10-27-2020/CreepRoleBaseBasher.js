@@ -9,7 +9,7 @@ CreepRoleBaseBasher.run = function(creep)
     if(creep.memory.proxyTarget && creep.room.name !== creep.memory.proxyTarget)
     {
 		//Wait for healer if you are in transit
-		if(creep.AllignWithHealer() == false)
+		if(creep.AllignWithHealer() == false | !creep.room.find(FIND_MY_CREEPS, {filter: c => (c.memory.role == 'healer' && c.memory.workTargetID == creep.id)}.length))
 			creep.CivilianExitMove(creep.memory.proxyTarget);
 		creep.RangedDefence();
     }else
@@ -17,9 +17,7 @@ CreepRoleBaseBasher.run = function(creep)
 		var target = this.WorkTarget(creep);
         if(target)
 		{
-			if(creep.pos.inRangeTo(target, 1))
-				creep.demolish(target);
-			else if(creep.AllignWithHealer() == false)
+		    if(creep.AllignWithHealer() == false)
 				this.Work(creep, target);
 			else
 				creep.RangedDefence();
@@ -54,7 +52,10 @@ CreepRoleBaseBasher.Work = function(creep, target)
 		creep.RangedDefence();
 	
 	if(target)
-        creep.Demolish(target);
+	    if(target instanceof Structure)
+            creep.Demolish(target);
+        else
+            creep.MilitaryMove(target.pos, 1);
 }
 
 

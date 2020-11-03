@@ -116,12 +116,14 @@ var RunCreep = function(creep)
     }
 }
 
+//Max overall average CPU for a room (One below LV4): 6.84
 module.exports.loop = function ()
 {
-
 	cpuCounter.run();
 	
+	
     memoryManager.run();
+	cpuCounter.StartCount("Non-mem managers");
 	safeModeManager.run();
     spawnManager.run();
     towerManager.run();
@@ -146,8 +148,10 @@ module.exports.loop = function ()
     alertManager.run();
 	linkManager.run();
 	
-	cpuCounter.StartCount("All Creeps");
+	cpuCounter.EndCount("Non-mem managers");
+	
     for(var name in Game.creeps)
         RunCreep(Game.creeps[name]);
-    cpuCounter.EndCount("All Creeps");
+        
+    
 }

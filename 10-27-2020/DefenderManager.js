@@ -29,7 +29,7 @@ var DefenderManager =
                         {
                             if(Game.rooms[r].find(FIND_MY_CREEPS, {filter: c => (c.memory.role == 'defender')}).length < 3)
                             {
-                                var defenderBody = SpawnManager.SelectBody(militarySpawn.room.energyCapacityAvailable, [new CreepBody({numAttack: 7, numMove: 7, numTough: 7}), new CreepBody({numAttack: 5, numMove: 5, numTough: 5}), new CreepBody({numAttack: 1, numMove: 1, numTough: 1})]);
+                                var defenderBody = SpawnManager.SelectBody(militarySpawn.room.energyCapacityAvailable, [new CreepBody({numAttack: 7, numMove: 7, numTough: 7}), new CreepBody({numAttack: 5, numMove: 5, numTough: 5}), new CreepBody({numAttack: 3, numMove: 5, numTough: 5}), new CreepBody({numAttack: 1, numMove: 1, numTough: 1})]);
                                 SpawnManager.SpawnCreep(militarySpawn, 'defender', defenderBody);
                             }else
                             {

@@ -30,15 +30,18 @@ CreepRoleCarrier.WorkTarget = function(creep)
     if(!target)
         target = creep.pos.findClosestByRange(FIND_MY_STRUCTURES, {filter: s => (s.structureType == STRUCTURE_TOWER && s.store.getFreeCapacity(RESOURCE_ENERGY) >= creep.store[RESOURCE_ENERGY])});
     
-	if(!target)
-	{
-	    var loaderLink = linkManager.LoaderLink(creep.room);
-	    if(loaderLink && loaderLink.store.getFreeCapacity(RESOURCE_ENERGY) > 0)
-		    target = loaderLink;
-	}
-	
-    if(!target)
-        target = creep.pos.findClosestByRange(FIND_STRUCTURES, {filter: s => (s.structureType === STRUCTURE_CONTAINER && s.pos.findInRange(FIND_STRUCTURES, 1, {filter: a => (a.structureType === STRUCTURE_CONTROLLER)}).length && s.store.getFreeCapacity(RESOURCE_ENERGY) >= creep.store[RESOURCE_ENERGY])});
+    if(!Game.flags['BaseBash'] || (Game.flags['BaseBash'] && creep.room.find(FIND_MY_CREEPS, {filter: c => (c.memory.role == 'loader')}).length && creep.room.storage && creep.room.storage.store[RESOURCE_ENERGY] >= creep.room.energyCapacityAvailable))
+    {
+    	if(!target)
+    	{
+    	    var loaderLink = linkManager.LoaderLink(creep.room);
+    	    if(loaderLink && loaderLink.store.getFreeCapacity(RESOURCE_ENERGY) > 0)
+    		    target = loaderLink;
+    	}
+    	
+        if(!target)
+            target = creep.pos.findClosestByRange(FIND_STRUCTURES, {filter: s => (s.structureType === STRUCTURE_CONTAINER && s.pos.findInRange(FIND_STRUCTURES, 1, {filter: a => (a.structureType === STRUCTURE_CONTROLLER)}).length && s.store.getFreeCapacity(RESOURCE_ENERGY) >= creep.store[RESOURCE_ENERGY])});
+    }
     
     if(!target)
         target = creep.pos.findClosestByRange(FIND_STRUCTURES, {filter: s => (((s.structureType === STRUCTURE_CONTAINER && !s.pos.findInRange(FIND_SOURCES, 1).length) || s.structureType === STRUCTURE_STORAGE)  && s.store.getFreeCapacity(RESOURCE_ENERGY) >= creep.store[RESOURCE_ENERGY])});
@@ -48,9 +51,6 @@ CreepRoleCarrier.WorkTarget = function(creep)
     {
         creep.memory.workTargetID = target.id;
         return target
-    }else if(_.sum(creep.store) < creep.store.getCapacity())
-    {
-        creep.memory.isWorking = false;
     }
     return null;
 }

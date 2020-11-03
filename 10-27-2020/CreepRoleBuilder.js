@@ -22,11 +22,11 @@ CreepRoleBuilder.WorkTarget = function(creep)
     if(target && (target instanceof ConstructionSite || (!(target instanceof ConstructionSite) && target.hits && target.hits < target.hitsMax)))
         return target;
     
-    target = creep.pos.findClosestByRange(FIND_MY_STRUCTURES, {filter: s => (s.structureType !== STRUCTURE_CONTROLLER && s.structureType !== STRUCTURE_RAMPART && s.hits < s.hitsMax)});
+    target = creep.pos.findClosestByRange(FIND_MY_STRUCTURES, {filter: s => (s.structureType !== STRUCTURE_CONTROLLER && s.structureType !== STRUCTURE_RAMPART && s.hits && s.hits < s.hitsMax)});
     
     if(!target)
     {
-        var barriers = creep.room.find(FIND_STRUCTURES, {filter: s => (s.structureType === STRUCTURE_WALL || s.structureType === STRUCTURE_RAMPART)});
+        var barriers = creep.room.find(FIND_STRUCTURES, {filter: s => ((s.structureType === STRUCTURE_WALL || s.structureType === STRUCTURE_RAMPART) && s.hits)});
         barriers = _.sortBy(barriers, b => b.hits);
         if(barriers.length && barriers[0].hits <= 100000)
             target = barriers[0];

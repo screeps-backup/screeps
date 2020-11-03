@@ -114,8 +114,8 @@ CreepRoleProxyCarrier.WorkTarget = function(creep)
         target = Game.rooms[creep.memory.spawnRoom].storage;
     
     if(!target)
-        target = Game.rooms[creep.memory.spawnRoom].find(FIND_STRUCTURES, {filter: s => s.structureType == STRUCTURE_CONTAINER && s.store.getFreeCapacity(RESOURCE_ENERGY) >= _.sum(creep.store)})[0] || null;
-    
+        target =  Game.rooms[creep.memory.spawnRoom].find(FIND_MY_STRUCTURES, {filter: s => (s !== target && (s.structureType === STRUCTURE_EXTENSION || s.structureType === STRUCTURE_SPAWN) && s.energy < s.energyCapacity)})[0] || nulll;
+        
     if(target)
     {
         creep.memory.workTargetID = target.id;

@@ -18,7 +18,7 @@ var BuildManager =
 				numMyRooms++;
 		}
 		
-		this.buildTicks = Math.max(numMyRooms * 100, 100);
+		this.buildTicks = Math.max(numMyRooms * 10, 10);
 	}
 }
 

@@ -28,7 +28,10 @@ var AutoBuildRubbleManager =
 							a += 1
 						}
 						if(i < allRubble.length)
-							Game.rooms[roomName].createConstructionSite(allRubble[i].pos.x, allRubble[i].pos.y, allRubble[i].structure.structureType);
+						{
+						    if(allRubble[i].structure.structureType !== STRUCTURE_SPAWN)
+							    Game.rooms[roomName].createConstructionSite(allRubble[i].pos.x, allRubble[i].pos.y, allRubble[i].structure.structureType);
+						}
 					}
 				}
 			}

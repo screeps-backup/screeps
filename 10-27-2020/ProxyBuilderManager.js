@@ -16,12 +16,30 @@ var ProxyBuilderManager =
                     var normalSpawn = Game.rooms[r].find(FIND_MY_SPAWNS, {filter: s => (s.name.startsWith("Spawn") && !s.spawnCooldownTime)})[0];
                     if(normalSpawn && SpawnManager.GlobalCreepsByRole('proxyBuilder').filter(c => (c.memory.spawnRoom == r)).length < 1)
                     {
-                        var proxyBuilderBody = SpawnManager.SelectBody(normalSpawn.room.energyCapacityAvailable, [new CreepBody({numWork: 3, numCarry: 1, numMove: 2})]);
-                        SpawnManager.SpawnCreep(normalSpawn, 'proxyBuilder', proxyBuilderBody);
+                        if(this.BuildSite(r) == true)
+                        {
+                            var proxyBuilderBody = SpawnManager.SelectBody(normalSpawn.room.energyCapacityAvailable, [new CreepBody({numWork: 6, numCarry: 2, numMove: 8}), new CreepBody({numWork: 3, numCarry: 1, numMove: 4})]);
+                            SpawnManager.SpawnCreep(normalSpawn, 'proxyBuilder', proxyBuilderBody);
+                        }else
+                        {
+                            var proxyBuilderBody = SpawnManager.SelectBody(normalSpawn.room.energyCapacityAvailable, [new CreepBody({numWork: 3, numCarry: 1, numMove: 4})]);
+                            SpawnManager.SpawnCreep(normalSpawn, 'proxyBuilder', proxyBuilderBody);
+                        }
                     }
                 }
             }
         }
+    },
+    BuildSite: function(spawnRoomName)
+    {
+        if(!(Memory.outpostNames && Memory.outpostNames[spawnRoomName]))
+            return false;
+        
+        for(var i in Memory.outpostNames[spawnRoomName])
+            if(Game.rooms[Memory.outpostNames[spawnRoomName][i]] && Game.rooms[Memory.outpostNames[spawnRoomName][i]].find(FIND_MY_CONSTRUCTION_SITES).length)
+                return true;
+                
+        return false;
     }
 }
 

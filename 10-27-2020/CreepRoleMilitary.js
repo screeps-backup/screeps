@@ -52,10 +52,10 @@ Creep.prototype.AllignWithHealer = function()
 //May have civlian applications which is why it's a general prototype
 Creep.prototype.MilitaryMove = function(targetPos, range=1)
 {
-	if(this.memory.inPathID && !Game.getObjectByID(this.memory.inPathID))
+	if(this.memory.inPathID && !Game.getObjectById(this.memory.inPathID))
 		delete this.memory.inPathID;
 	//Don't move if you're at the target or there's a structure blocking your path
-	if((!targetPos || (targetPos && this.pos.inRangeTo(targetPos, range))) | (this.memory.inPathID && Game.getObjectByID(this.memory.inPathID)))		
+	if((!targetPos || (targetPos && this.pos.inRangeTo(targetPos, range))) | (this.memory.inPathID && Game.getObjectById(this.memory.inPathID)))		
 		return;
 	
 	var numWork = 0;

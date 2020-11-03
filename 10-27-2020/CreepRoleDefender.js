@@ -13,6 +13,7 @@ CreepRoleDefender.WorkTarget = function(creep)
         {
             creep.memory.defend = true;
         }
+        creep.MeleeDefence();
     }
     
     return null;

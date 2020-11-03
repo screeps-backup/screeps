@@ -56,7 +56,7 @@ var AutoBuildRoadManager =
     {
         for(var i in Game.constructionSites)
         {
-            if(Game.constructionSites[i].structureType == STRUCTURE_ROAD && (Game.constructionSites[i].pos.roomName == startPos.roomName | Game.constructionSites[i].pos.roomName == startPos.roomName))
+            if(Game.constructionSites[i].pos.roomName == startPos.roomName)
                 return true;
         }
         
