@@ -1,5 +1,6 @@
 
-const defendTicks = 100;
+//750 = ~0.5HR
+const defendTicks = 750;
 
 var AlertManager = 
 {
@@ -21,10 +22,18 @@ var AlertManager =
 			if(!(i in flagRoomNames) && Game.rooms[i].controller && Game.rooms[i].controller.my)
 				this.AlertHostileCreepAttack(Game.rooms[i]);
 		}
+		if(Game.time % 1400 == 0)
+		{
+		    for(var i in Game.rooms)
+		    {
+		        if(Game.rooms[i].controller && Game.rooms[i].controller.my && Game.rooms[i].storage)
+		            this.IssueReport(Game.rooms[i]);
+		    }
+		}
     },
     AlertHostileCreepAttack: function(room)
     {
-        if(room.find(FIND_HOSTILE_CREEPS, {filter: c => (c.body.length > 1 && c.owner.username != "Invader")}).length)
+        if(room.find(FIND_HOSTILE_CREEPS, {filter: c => (c.body.length > 1 && c.owner.username !== "Invader")}).length)
         {
             Game.notify("ATTACK AT: " + room.name, 30);
             console.log("ATTACK AT: " + room.name);
@@ -32,7 +41,7 @@ var AlertManager =
     },
     OnAlert: function(roomName)
     {
-        if(Game.rooms[roomName].controller && Game.rooms[roomName].controller.my)
+        if(Game.rooms[roomName].controller && Game.rooms[roomName].controller.my && (roomName in Memory.defendTimes))
         {
             return Memory.defendTimes[roomName] + defendTicks >= Game.time;
         }
@@ -126,7 +135,15 @@ var AlertManager =
 			return null;
 		
 		return toReturn;
+	},
+	IssueReport: function(room)
+	{
+	    if(room.storage)
+	    {
+	        Game.notify("Energy storage (" + room.name + "): " + room.storage.store[RESOURCE_ENERGY].toString(), 60);
+	    }
 	}
 }
+Memory.defendTimes = [];
 
 module.exports = AlertManager;

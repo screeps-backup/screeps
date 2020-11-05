@@ -19,7 +19,7 @@ CreepRoleProxyBuilder.run = function(creep)
 CreepRoleProxyBuilder.WorkTarget = function(creep)
 {
     var target = Game.getObjectById(creep.memory.workTargetID);
-    if(target && target.room.name == creep.room.name && (!target.hits || (target.hits && target.hits < target.hitsMax)))
+    if(target && target.room.name == creep.room.name && ((!target.hits && (target instanceof ConstructionSite)) || (target.hits && target.hits < target.hitsMax)))
         return target;
     
     if(creep.room.name != creep.memory.spawnRoom)
@@ -28,7 +28,7 @@ CreepRoleProxyBuilder.WorkTarget = function(creep)
         
         if(!target)
         {
-            var barriers = creep.room.find(FIND_STRUCTURES, {filter: s => (s.structureType === STRUCTURE_WALL || s.structureType === STRUCTURE_RAMPART)});
+            var barriers = creep.room.find(FIND_STRUCTURES, {filter: s => (s.hits && (s.structureType === STRUCTURE_WALL || s.structureType === STRUCTURE_RAMPART))});
             barriers = _.sortBy(barriers, b => b.hits);
             if(barriers.length && barriers[0].hits <= 100000)
                 target = barriers[0];
@@ -46,19 +46,22 @@ CreepRoleProxyBuilder.WorkTarget = function(creep)
             return target;
         }
     }
-    for(var a in Memory.outpostNames[creep.memory.spawnRoom])
+    if(!target)
     {
-        if(Game.rooms[Memory.outpostNames[creep.memory.spawnRoom][a]] && !Game.rooms[Memory.outpostNames[creep.memory.spawnRoom][a]].find(FIND_HOSTILE_CREEPS, {filter: c => (c.body.length > 1)}).length)
+        for(var a in Memory.outpostNames[creep.memory.spawnRoom])
         {
-            if(Game.rooms[Memory.outpostNames[creep.memory.spawnRoom][a]].find(FIND_MY_CONSTRUCTION_SITES).length)
+            if(Game.rooms[Memory.outpostNames[creep.memory.spawnRoom][a]] && !Game.rooms[Memory.outpostNames[creep.memory.spawnRoom][a]].find(FIND_HOSTILE_CREEPS, {filter: c => (c.body.length > 1)}).length)
             {
-                creep.memory.proxyTarget = Memory.outpostNames[creep.memory.spawnRoom][a];
-                return;
-            }
-            if(Game.rooms[Memory.outpostNames[creep.memory.spawnRoom][a]].find(FIND_STRUCTURES, {filter: s => (s.structureType != STRUCTURE_WALL && s.structureType != STRUCTURE_RAMPART && (s.structureType != STRUCTURE_CONTAINER || (s.structureType == STRUCTURE_CONTAINER && s.hits < s.hitsMax / 2)) && s.hitsMax - s.hits > 2500)}).length)
-            {
-                creep.memory.proxyTarget = Memory.outpostNames[creep.memory.spawnRoom][a];
-                return;
+                if(Game.rooms[Memory.outpostNames[creep.memory.spawnRoom][a]].find(FIND_MY_CONSTRUCTION_SITES).length)
+                {
+                    creep.memory.proxyTarget = Memory.outpostNames[creep.memory.spawnRoom][a];
+                    return;
+                }
+                if(Game.rooms[Memory.outpostNames[creep.memory.spawnRoom][a]].find(FIND_STRUCTURES, {filter: s => (s.hits && (s.structureType === STRUCTURE_ROAD || s.structureType === STRUCTURE_CONTAINER) && s.hits <= s.hitsMax - creep.store.getCapacity(RESOURCE_ENERGY) * 100)}).length)
+                {
+                    creep.memory.proxyTarget = Memory.outpostNames[creep.memory.spawnRoom][a];
+                    return;
+                }
             }
         }
     }
@@ -68,10 +71,10 @@ CreepRoleProxyBuilder.WorkTarget = function(creep)
 CreepRoleProxyBuilder.OffTarget = function(creep)
 {
     var target = Game.getObjectById(creep.memory.offTargetID);
-    if(target && target.room.name == creep.room.name && ((target.store && target.store[RESOURCE_ENERGY] > 0) | (target.energy && target.energy > 0)))
+    if(target && target.room.name == creep.room.name && ((target.store && target.store[RESOURCE_ENERGY] >= creep.store.getFreeCapacity(RESOURCE_ENERGY)) | (target.energy && target.energy > 0)))
         return target;
     
-    target = creep.pos.findClosestByRange(FIND_STRUCTURES, {filter: s => (((s.structureType === STRUCTURE_CONTAINER && !s.pos.findInRange(FIND_STRUCTURES, 1, {filter: a => a.structureType === STRUCTURE_CONTROLLER}).length) || s.structureType === STRUCTURE_STORAGE) && s.store[RESOURCE_ENERGY] > 0)});
+    target = creep.pos.findClosestByRange(FIND_STRUCTURES, {filter: s => (((s.structureType === STRUCTURE_CONTAINER && !s.pos.findInRange(FIND_STRUCTURES, 1, {filter: a => a.structureType === STRUCTURE_CONTROLLER}).length) || s.structureType === STRUCTURE_STORAGE) && s.store[RESOURCE_ENERGY] >= creep.store.getFreeCapacity(RESOURCE_ENERGY))});
     
     if(!target)
         target = creep.pos.findClosestByPath(FIND_SOURCES);

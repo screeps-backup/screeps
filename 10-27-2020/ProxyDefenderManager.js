@@ -48,9 +48,8 @@ var ProxyDefenderManager =
 								if(targetUnits < 1 && targetValue > 0)
 									targetUnits = 1;
 								
-								Game.notify('PROXY UNDER ATTACK (' + Game.time.toString() + '): ' + Memory.outpostNames[roomName][a]);
+								Game.notify('PROXY UNDER ATTACK (' + Game.time.toString() + '): ' + Memory.outpostNames[roomName][a], 30);
 								console.log('PROXY UNDER ATTACK (' + Game.time.toString() + '): ' + Memory.outpostNames[roomName][a]);
-								console.log("Target: " + targetUnits);
 								if(targetUnits <= 9)
 								{
 									

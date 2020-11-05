@@ -1,10 +1,13 @@
 //LV1: 300
 //LV2: 550
 //LV3: 800
+//LV4: 1300
+//LV5: 1800
 
 var CreepBody = require("CreepBody");
 var AlertManager = require("AlertManager");
 
+var normalCarrierBodies = [new CreepBody({numCarry: 16, numMove: 8}), new CreepBody({numCarry: 10, numMove: 5}), new CreepBody({numCarry: 5, numMove: 5}), new CreepBody({numCarry: 3, numMove: 3})];
 var normalUpgraderBodies = [new CreepBody({numWork: 3, numCarry: 2, numMove: 3}), new CreepBody({numWork: 1, numCarry: 1, numMove: 2})];
 
 var SpawnManager = 
@@ -32,29 +35,40 @@ var SpawnManager =
         
         this.normalSpawnDone[spawn.room.name] = false;
         
+        var safeToSpawnAll = this.SafeToSpawnAll(spawn.room);
+        
         if(spawn.room.find(FIND_MY_CREEPS, {filter: c => (c.memory.role == 'carrier')}).length == 0)
         {
             if(spawn.room.storage && spawn.room.storage.store[RESOURCE_ENERGY] >= spawn.room.energyCapacityAvailable + 300)
             {
                 if(!spawn.room.find(FIND_MY_CREEPS, {filter: c => (c.memory.role === 'loader')}).length)
-                    this.SpawnCreep(spawn, 'loader', [CARRY, CARRY, CARRY, MOVE, MOVE, MOVE]);
-            }else
+                {
+                    if(spawn.room.energyAvailable < spawn.room.energyCapacityAvailable)
+                        this.SpawnCreep(spawn, 'loader', [CARRY, CARRY, CARRY, MOVE, MOVE, MOVE]);
+                    else
+                        this.SpawnCreep(spawn, 'loader', normalCarrierBodies);
+                    
+                    return;
+                }
+            }else if(safeToSpawnAll == true)
             {
                 if(!spawn.room.find(FIND_MY_CREEPS, {filter: c => (c.memory.role == 'miner')}).length)
                     this.SpawnCreep(spawn, 'miner', [WORK, CARRY, MOVE, MOVE]);
+                    
+                return;
             }
-            return;
+            
         }
         
-        if(spawn.room.find(FIND_MY_CREEPS, {filter: c => (c.memory.role == 'miner' && !this.DueToDie(c))}).length < spawn.room.find(FIND_SOURCES).length)
+        if(safeToSpawnAll == true && spawn.room.find(FIND_MY_CREEPS, {filter: c => (c.memory.role == 'miner' && !this.DueToDie(c))}).length < spawn.room.find(FIND_SOURCES).length)
         {
             var minerBody = this.SelectBody(spawn.room.energyCapacityAvailable, [new CreepBody({numWork: 5, numCarry: 1, numMove: 3}), new CreepBody({numWork: 4, numCarry: 1, numMove: 1}), new CreepBody({numWork: 2, numCarry: 1, numMove: 1})]);
             this.SpawnCreep(spawn, 'miner', minerBody);
         }else
         {
-            if(spawn.room.find(FIND_MY_CREEPS, {filter: c => (c.memory.role == 'carrier' && !this.DueToDie(c))}).length < 2)
+            if(safeToSpawnAll == true && spawn.room.find(FIND_MY_CREEPS, {filter: c => (c.memory.role == 'carrier' && !this.DueToDie(c))}).length < 2)
             {
-			    var carrierBody = this.SelectBody(spawn.room.energyCapacityAvailable, [new CreepBody({numCarry: 16, numMove: 5}), new CreepBody({numCarry: 10, numMove: 5}), new CreepBody({numCarry: 5, numMove: 5}), new CreepBody({numCarry: 3, numMove: 3})]);
+			    var carrierBody = this.SelectBody(spawn.room.energyCapacityAvailable, normalCarrierBodies);
                 this.SpawnCreep(spawn, 'carrier', carrierBody);
             }else
             {
@@ -64,9 +78,9 @@ var SpawnManager =
                     this.SpawnCreep(spawn, 'loader', loaderBody);
                 }else
                 {
-                    if(spawn.room.find(FIND_MY_CREEPS, {filter: c => (c.memory.role == 'upgrader')}).length < 2)
+                    if((safeToSpawnAll == true && ( ( !(spawn.room.storage && spawn.room.storage.store[RESOURCE_ENERGY] >= 200000) && spawn.room.find(FIND_MY_CREEPS, {filter: c => (c.memory.role == 'upgrader')}).length < 2) || ( (spawn.room.storage && spawn.room.storage.store[RESOURCE_ENERGY] >= 200000) && spawn.room.find(FIND_MY_CREEPS, {filter: c => (c.memory.role == 'upgrader')}).length < 3)) ) || (safeToSpawnAll != true && spawn.room.find(FIND_MY_CREEPS, {filter: c => (c.memory.role == 'upgrader')}).length < 1))
                     {
-						if(spawn.room.controller.level >= 4 && spawn.room.energyCapacityAvailable >= 1300 && spawn.room.storage && spawn.room.storage.store[RESOURCE_ENERGY] >= 300000)
+						if(spawn.room.controller.level >= 4 && spawn.room.energyCapacityAvailable >= 1300 && spawn.room.storage && spawn.room.storage.store[RESOURCE_ENERGY] >= 150000)
 						{
 							var upgraderBody = this.SelectBody(spawn.room.energyCapacityAvailable, [new CreepBody({numWork: 10, numCarry: 2, numMove: 2})]);
 							this.SpawnCreep(spawn, 'upgrader', upgraderBody);
@@ -77,7 +91,7 @@ var SpawnManager =
 						}
                     }else
                     {
-                        if((!spawn.room.find(FIND_MY_CONSTRUCTION_SITES).length && spawn.room.find(FIND_MY_CREEPS, {filter: c => (c.memory.role == 'builder')}).length < 1 || ( (spawn.room.find(FIND_MY_CONSTRUCTION_SITES).length && ((AlertManager.OnAlert(spawn.room.name) == true && spawn.room.find(FIND_MY_CREEPS, {filter: c => (c.memory.role == 'builder')}).length < 3) || (AlertManager.OnAlert(spawn.room.name) == false && spawn.room.find(FIND_MY_CREEPS, {filter: c => (c.memory.role == 'builder')}).length < 6))))))
+                        if((!spawn.room.find(FIND_MY_CONSTRUCTION_SITES).length && spawn.room.find(FIND_MY_CREEPS, {filter: c => (c.memory.role == 'builder')}).length < 1 || ( (spawn.room.find(FIND_MY_CONSTRUCTION_SITES).length && ((AlertManager.OnAlert(spawn.room.name) == true && spawn.room.find(FIND_MY_CREEPS, {filter: c => (c.memory.role == 'builder')}).length < 3) || (AlertManager.OnAlert(spawn.room.name) != true && ( ( !(spawn.room.storage && spawn.room.storage.store[RESOURCE_ENERGY] >= 100000) && spawn.room.find(FIND_MY_CREEPS, {filter: c => (c.memory.role == 'builder')}).length < 1) || ( (spawn.room.storage && spawn.room.storage.store[RESOURCE_ENERGY] >= 100000) && spawn.room.find(FIND_MY_CREEPS, {filter: c => (c.memory.role == 'builder')}).length < 6) ) ))))))
                         {
                             var builderBody = this.SelectBody(spawn.room.energyCapacityAvailable, [new CreepBody({numWork: 3, numCarry: 3, numMove: 6}), new CreepBody({numWork: 2, numCarry: 2, numMove: 4}), new CreepBody({numWork: 1, numCarry: 1, numMove: 2})]);
                             this.SpawnCreep(spawn, 'builder', builderBody);
@@ -85,15 +99,18 @@ var SpawnManager =
                         {
                             this.normalSpawnDone[spawn.room.name] = true;
                             
-                            //Build extra builders in case of attack by a player
-                            if(Memory.defendTimes[spawn.room.name] && AlertManager.OnAlert(spawn.room.name) == true && spawn.room.find(FIND_MY_CREEPS, {filter: c => (c.memory.role == 'builder')}).length < 3)
+                            if(safeToSpawnAll == true)
                             {
-                                var builderBody = this.SelectBody(spawn.room.energyCapacityAvailable, [new CreepBody({numWork: 4, numCarry: 4, numMove: 8}), new CreepBody({numWork: 2, numCarry: 2, numMove: 4}), new CreepBody({numWork: 1, numCarry: 1, numMove: 2})]);
-                                this.SpawnCreep(spawn, 'builder', builderBody);
-                            }else if(!(spawn.room.controller.level >= 4 && spawn.room.energyCapacityAvailable >= 1300 && spawn.room.storage) && AlertManager.OnAlert(spawn.room.name) == false && !spawn.room.find(FIND_MY_CONSTRUCTION_SITES).length && !Game.flags['BaseBash'] && spawn.room.find(FIND_MY_CREEPS, {filter: c => (c.memory.role == 'builder')}).length < 6 && spawn.room.find(FIND_MY_CREEPS, {filter: c => (c.memory.role == 'upgrader')}).length < 5)
-                            {
-                                var upgraderBody = this.SelectBody(spawn.room.energyCapacityAvailable, normalUpgraderBodies);
-							    this.SpawnCreep(spawn, 'upgrader', upgraderBody);
+                                //Build extra builders in case of attack by a player
+                                if((AlertManager.OnAlert(spawn.room.name) == true && spawn.room.find(FIND_MY_CREEPS, {filter: c => (c.memory.role == 'builder')}).length < 3) || (AlertManager.OnAlert(spawn.room.name) != true && (!spawn.room.storage | spawn.room.level < 4) && spawn.room.find(FIND_MY_CREEPS, {filter: c => (c.memory.role == 'builder')}).length < 8))
+                                {
+                                    var builderBody = this.SelectBody(spawn.room.energyCapacityAvailable, [new CreepBody({numWork: 4, numCarry: 4, numMove: 8}), new CreepBody({numWork: 2, numCarry: 2, numMove: 4}), new CreepBody({numWork: 1, numCarry: 1, numMove: 2})]);
+                                    this.SpawnCreep(spawn, 'builder', builderBody);
+                                }else if(!(spawn.room.controller.level >= 4 && spawn.room.energyCapacityAvailable >= 1300 && spawn.room.storage) && AlertManager.OnAlert(spawn.room.name) == false && !spawn.room.find(FIND_MY_CONSTRUCTION_SITES).length && !Game.flags['BaseBash'] && spawn.room.find(FIND_MY_CREEPS, {filter: c => (c.memory.role == 'builder')}).length < 6 && spawn.room.find(FIND_MY_CREEPS, {filter: c => (c.memory.role == 'upgrader')}).length < 5)
+                                {
+                                    var upgraderBody = this.SelectBody(spawn.room.energyCapacityAvailable, normalUpgraderBodies);
+    							    this.SpawnCreep(spawn, 'upgrader', upgraderBody);
+                                }
                             }
                         }
                     }
@@ -185,6 +202,15 @@ var SpawnManager =
         {
             this.SpawnCreep(normalSpawn, 'scout', [MOVE], {proxyTarget: proxyTargetName});
         }
+    },
+    SafeToSpawnAll: function(room)
+    {
+        //Purposelly using an if statement to make sure it's a bool
+        //If there's enemies and no energy stockpile
+        if(AlertManager.OnAlert(room.name) && room.controller && room.controller.level >= 4 && room.storage && room.storage.store[RESOURCE_ENERGY] >= 30000)
+            return false;
+        
+        return true;
     }
 }
 

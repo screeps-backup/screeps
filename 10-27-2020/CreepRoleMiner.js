@@ -8,7 +8,7 @@ CreepRoleMiner.IsWorking = function(creep)
         if(_.sum(creep.store) == creep.store.getCapacity())
         {
             var offTarget = this.OffTarget(creep);
-            if(!offTarget || (offTarget && ((offTarget instanceof ConstructionSite) | !creep.pos.inRangeTo(offTarget, 0))))
+            if(!offTarget || (offTarget && ((offTarget instanceof ConstructionSite) | !creep.pos.inRangeTo(offTarget, 0) | offTarget.pos.findInRange(FIND_STRUCTURES, 1, {filter: s => (s.structureType === STRUCTURE_CONTAINER && s.store.getFreeCapacity(RESOURCE_ENERGY) == 0)}).length > 0)))
                 creep.memory.isWorking = false;
         }
     }else

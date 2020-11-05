@@ -1,4 +1,5 @@
 
+var alertManager = require("AlertManager");
 
 var creepRole = require("CreepRole");
 
@@ -32,7 +33,12 @@ CreepRoleBuilder.WorkTarget = function(creep)
             target = barriers[0];
         
         if(!target)
-            target = creep.pos.findClosestByRange(FIND_STRUCTURES, {filter: s => (s.structureType !== STRUCTURE_CONTROLLER && s.structureType !== STRUCTURE_RAMPART && s.structureType !== STRUCTURE_WALL && s.hits < Math.max(s.hitsMax - creep.store.getCapacity() * 100, s.hitsMax / 2))});
+        {
+            if(alertManager.OnAlert(creep.room.name) == true)
+                target = creep.pos.findClosestByRange(FIND_STRUCTURES, {filter: s => (s.structureType !== STRUCTURE_CONTROLLER && s.structureType !== STRUCTURE_RAMPART && s.structureType !== STRUCTURE_WALL && s.structureType !== STRUCTURE_ROAD && s.structureType !== STRUCTURE_CONTAINER && s.structureType !== STRUCTURE_LINK && s.hits <= s.hitsMax / 2)});
+            else
+                target = creep.pos.findClosestByRange(FIND_STRUCTURES, {filter: s => (s.structureType !== STRUCTURE_CONTROLLER && s.structureType !== STRUCTURE_RAMPART && s.structureType !== STRUCTURE_WALL && s.hits < Math.max(s.hitsMax - creep.store.getCapacity() * 100, s.hitsMax / 2))});
+        }
         
         hostilesPresent = creep.room.find(FIND_HOSTILE_CREEPS, {filter: c => (c.body.length > 1)}).length > 0;
         if(!target && !hostilesPresent)

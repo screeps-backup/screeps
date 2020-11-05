@@ -76,19 +76,19 @@ CreepRoleCarrier.Work = function(creep, target)
 CreepRoleCarrier.OffTarget = function(creep)
 {
     var target = Game.getObjectById(creep.memory.offTargetID);
-    if(target && ((target.energy && target.energy > 0) | (target.store && target.store[RESOURCE_ENERGY] > 0)))
+    if(target && ((target.energy && target.energy > 0) | (target.store && target.store[RESOURCE_ENERGY] >= creep.store.getFreeCapacity(RESOURCE_ENERGY))))
         return target;
     
     target = null;
     
     
-    var mineContainers = creep.room.find(FIND_STRUCTURES, {filter: s => (s.structureType === STRUCTURE_CONTAINER && s.store[RESOURCE_ENERGY] > creep.store.getCapacity(RESOURCE_ENERGY) && s.pos.findInRange(FIND_SOURCES, 1).length)});
+    var mineContainers = creep.room.find(FIND_STRUCTURES, {filter: s => (s.structureType === STRUCTURE_CONTAINER && s.store[RESOURCE_ENERGY] >= creep.store.getFreeCapacity(RESOURCE_ENERGY) && s.pos.findInRange(FIND_SOURCES, 1).length)});
     mineContainers = _.sortBy(mineContainers, m => m.store[RESOURCE_ENERGY]);
     if(mineContainers.length)
         target = mineContainers[mineContainers.length - 1];
     
     if(!target)
-        target = creep.pos.findClosestByRange(FIND_STRUCTURES, {filter: s => ( s.structureType === STRUCTURE_CONTAINER && !s.pos.findInRange(FIND_STRUCTURES, 1, {filter: a => (a.structureType === STRUCTURE_CONTROLLER)}).length && s.store[RESOURCE_ENERGY] >= creep.store.getCapacity(RESOURCE_ENERGY))});
+        target = creep.pos.findClosestByRange(FIND_STRUCTURES, {filter: s => ( s.structureType === STRUCTURE_CONTAINER && !s.pos.findInRange(FIND_STRUCTURES, 1, {filter: a => (a.structureType === STRUCTURE_CONTROLLER)}).length && s.store[RESOURCE_ENERGY] >= creep.store.getFreeCapacity(RESOURCE_ENERGY))});
         
     if(!target)
     {

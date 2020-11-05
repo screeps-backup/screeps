@@ -9,7 +9,7 @@ var LinkManager =
 	        {
 	            var loaderLink = this.LoaderLink(Game.rooms[i]);
 	            var controllerLink = this.ControllerLink(Game.rooms[i]);
-	            if(loaderLink)
+	            if(loaderLink && loaderLink.store.getFreeCapacity(RESOURCE_ENERGY) == 0)
 	            {
 	                if(controllerLink && controllerLink.store[RESOURCE_ENERGY] == 0)
 	                    loaderLink.transferEnergy(controllerLink);
@@ -19,9 +19,8 @@ var LinkManager =
 	},
 	LoaderLink: function(room)
 	{
-		var spawn = room.find(FIND_MY_SPAWNS, {filter: s => (s.name.startsWith("Spawn"))})[0] || null;
-		if(spawn)
-			return spawn.pos.findInRange(FIND_MY_STRUCTURES, 5, {filter: s => (s.structureType === STRUCTURE_LINK)})[0] || null;
+	    if(room.storage)
+			return room.storage.pos.findInRange(FIND_MY_STRUCTURES, 3, {filter: s => (s.structureType === STRUCTURE_LINK)})[0] || null;
 		
 		return null;
 	},

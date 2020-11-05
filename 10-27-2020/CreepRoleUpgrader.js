@@ -40,7 +40,7 @@ CreepRoleUpgrader.OffTarget = function(creep)
     
     if(!target)
     {
-        if(creep.room.controller && creep.room.controller.level >= 4 && creep.room.storage && creep.room.storage.store[RESOURCE_ENERGY] >= 200000)
+        if(creep.room.controller && creep.room.controller.level >= 4 && creep.room.storage && creep.room.storage.store[RESOURCE_ENERGY] >= 150000)
             target = creep.room.controller.pos.findClosestByRange(FIND_STRUCTURES, {filter: s => s.structureType == STRUCTURE_CONTAINER});
         else
             target = creep.pos.findClosestByRange(FIND_STRUCTURES, {filter: s => ((s.structureType === STRUCTURE_CONTAINER || s.structureType === STRUCTURE_STORAGE) && s.store[RESOURCE_ENERGY] >= creep.store.getFreeCapacity(RESOURCE_ENERGY))});

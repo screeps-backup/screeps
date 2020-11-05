@@ -15,7 +15,11 @@ CreepRoleDemolisher.run = function(creep)
 }
 CreepRoleDemolisher.WorkTarget = function(creep)
 {
-    return creep.pos.findClosestByPath(FIND_HOSTILE_STRUCTURES, {filter: s => (s.structureType != STRUCTURE_RAMPART && s.structureType != STRUCTURE_CONTROLLER)});
+    var target = creep.pos.findClosestByPath(FIND_HOSTILE_STRUCTURES, {filter: s => (s.hits && s.structureType !== STRUCTURE_RAMPART && s.structureType !== STRUCTURE_CONTROLLER)});
+    if(!target)
+        target = creep.pos.findClosestByPath(FIND_STRUCTURES, {filter: s => (s.hits && (s.structureType === STRUCTURE_WALL || s.structureType === STRUCTURE_RAMPART))});
+        
+    return target;
 }
 CreepRoleDemolisher.Work = function(creep, target)
 {
@@ -25,19 +29,23 @@ CreepRoleDemolisher.Work = function(creep, target)
     {
         creep.attack(buildSites[0]);
     }
-    if(creep.pos.inRangeTo(target, 1))
+    
+    if(!creep.room.controller || (creep.room.controller && !creep.room.controller.my))
     {
-        if(creep.pos.findInRange(FIND_MY_STRUCTURES, 0, {filter: s => (s.structureType == STRUCTURE_RAMPART)}).length)
+        if(creep.pos.inRangeTo(target, 1))
         {
-            creep.moveTo(target);
+            if(creep.pos.findInRange(FIND_MY_STRUCTURES, 0, {filter: s => (s.structureType == STRUCTURE_RAMPART)}).length)
+            {
+                creep.moveTo(target);
+            }else
+            {
+                creep.dismantle(target);
+                creep.attack(target);
+            }
         }else
         {
-            creep.dismantle(target);
-            creep.attack(target);
+            creep.MilitaryMove(target.pos, 1);
         }
-    }else
-    {
-        creep.MilitaryMove(target.pos, 1);
     }
 }
 

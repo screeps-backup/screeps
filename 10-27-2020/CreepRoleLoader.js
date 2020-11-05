@@ -1,6 +1,7 @@
 var creepRole = require('CreepRole');
 
 var linkManager = require("LinkManager");
+var alertManager = require("AlertManager");
 
 var CreepRoleLoader = Object.create(creepRole);
 CreepRoleLoader.IsWorking = function(creep)
@@ -24,12 +25,16 @@ CreepRoleLoader.WorkTarget = function(creep)
     
     target = null;
     
-    target = creep.pos.findClosestByRange(FIND_MY_STRUCTURES, {filter: s => ((s.structureType === STRUCTURE_EXTENSION && s.energy < s.energyCapacity) || (s.structureType === STRUCTURE_SPAWN && s.store[RESOURCE_ENERGY] < s.store.getCapacity(RESOURCE_ENERGY)))});
+    if((alertManager.OnAlert(creep.room.name) == true | creep.room.find(FIND_HOSTILE_CREEPS, {filter: c => (c.body.length > 1)}).length > 0) && creep.room.storage && creep.room.storage.store[RESOURCE_ENERGY] >= 50000)
+        target = creep.pos.findClosestByRange(FIND_MY_STRUCTURES, {filter: s => (s.structureType == STRUCTURE_TOWER && s.store.getFreeCapacity(RESOURCE_ENERGY) >= Math.min(creep.store.getCapacity(), 800))});
     
-    if(_.sum(creep.store) > creep.store.getCapacity() / 2)
+    if(!target)
+        target = creep.pos.findClosestByRange(FIND_MY_STRUCTURES, {filter: s => ((s.structureType === STRUCTURE_EXTENSION && s.energy < s.energyCapacity) || (s.structureType === STRUCTURE_SPAWN && s.store[RESOURCE_ENERGY] < s.store.getCapacity(RESOURCE_ENERGY)))});
+    
+    if(!target && creep.store[RESOURCE_ENERGY] > creep.store.getCapacity() / 2)
     {
-        if(!target)
-            target = creep.pos.findClosestByRange(FIND_MY_STRUCTURES, {filter: s => (s.structureType == STRUCTURE_TOWER && s.store.getFreeCapacity(RESOURCE_ENERGY) >= creep.store.getCapacity())});
+        if(alertManager.OnAlert(creep.room.name) != true)
+            target = creep.pos.findClosestByRange(FIND_MY_STRUCTURES, {filter: s => (s.structureType == STRUCTURE_TOWER && s.store.getFreeCapacity(RESOURCE_ENERGY) >= Math.min(creep.store.getCapacity(), 800))});
     
         if(!target)
     	{
@@ -37,6 +42,9 @@ CreepRoleLoader.WorkTarget = function(creep)
     	    if(loaderLink && loaderLink.store.getFreeCapacity(RESOURCE_ENERGY) > 0)
     		    target = loaderLink;
     	}
+    	
+    	if(!target && !creep.room.find(FIND_MY_STRUCTURES, {filter: s => (s.structureType === STRUCTURE_LINK)}).length && creep.room.storage && creep.room.storage.store[RESOURCE_ENERGY] >= 150000)
+    	    target = creep.room.controller.pos.findInRange(FIND_STRUCTURES, 1, {filter: s => (s.structureType === STRUCTURE_CONTAINER && s.store.getFreeCapacity(RESOURCE_ENERGY) >= creep.store[RESOURCE_ENERGY])})[0] || null;
     }
     
         

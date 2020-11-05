@@ -4,6 +4,8 @@ var OutpostManager = require('OutpostManager');
 var defenderManager = require('DefenderManager');
 var proxyDefenderManager = require("ProxyDefenderManager");
 
+var proxyCarrierBodies = [new CreepBody({numCarry: 24, numMove: 12}), new CreepBody({numCarry: 16, numMove: 8}), new CreepBody({numCarry: 10, numMove: 5})];
+
 var ProxyHaulerManager = 
 {
     run: function()
@@ -20,7 +22,7 @@ var ProxyHaulerManager =
                     var normalSpawn = Game.rooms[r].find(FIND_MY_SPAWNS, {filter: s => (s.name.startsWith("Spawn") && !s.spawnCooldownTimes)})[0];
                     if(normalSpawn && SpawnManager.GlobalCreepsByRole('proxyCarrier').filter(c => (c.memory.spawnRoom == r && !SpawnManager.DueToDie(c))).length < this.numHaulers[r])
                     {
-                        var proxyHaulerBody = SpawnManager.SelectBody(normalSpawn.room.energyCapacityAvailable, [new CreepBody({numCarry: 16, numMove: 8}), new CreepBody({numCarry: 10, numMove: 5})]);
+                        var proxyHaulerBody = SpawnManager.SelectBody(normalSpawn.room.energyCapacityAvailable, proxyCarrierBodies);
                         SpawnManager.SpawnCreep(normalSpawn, 'proxyCarrier', proxyHaulerBody);
                     }
                 }
@@ -32,13 +34,13 @@ var ProxyHaulerManager =
         this.numHaulers = [];
         for(var r in Game.rooms)
         {
-            if(Game.rooms[r].controller && Game.rooms[r].controller.my && Game.rooms[r].controller.level >= 4 && Memory.outpostNames[r] && SpawnManager.normalSpawnDone[r] == true)
+            if(Game.rooms[r].controller && Game.rooms[r].controller.my && Game.rooms[r].controller.level >= 4 && Memory.outpostNames[r])
             {
                 var normalSpawn = Game.rooms[r].find(FIND_MY_SPAWNS, {filter: s => (s.name.startsWith("Spawn"))})[0];
                 if(normalSpawn)
                 {
                     this.numHaulers[r] = 0;
-                    var proxyHaulerBody = SpawnManager.SelectBody(normalSpawn.room.energyCapacityAvailable, [new CreepBody({numCarry: 16, numMove: 8}), new CreepBody({numCarry: 10, numMove: 5})]);
+                    var proxyHaulerBody = SpawnManager.SelectBody(normalSpawn.room.energyCapacityAvailable, proxyCarrierBodies);
                     if(proxyHaulerBody)
                     {
                         var numCarry = 0;
@@ -78,7 +80,6 @@ var ProxyHaulerManager =
                         }
                         
                     }
-                    this.numHaulers[r] = Math.ceil(this.numHaulers[r]);
                     
                     
                         /*
@@ -107,6 +108,8 @@ var ProxyHaulerManager =
                         }
                         */
                     }
+                    this.numHaulers[r] = Math.ceil(this.numHaulers[r]);
+                    console.log(this.numHaulers[r]);
                     
                 }
             }

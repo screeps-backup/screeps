@@ -31,9 +31,9 @@ CreepRoleProxyCarrier.run = function(creep)
 CreepRoleProxyCarrier.OffTarget = function(creep)
 {
     var target = Game.getObjectById(creep.memory.offTargetID);
-    if(target && ((target.energy && target.energy >= creep.store.getCapacity())))
+    if(target && ((target.energy && target.energy >= creep.store.getFreeCapacity(RESOURCE_ENERGY))))
         return target;
-    if(target && (target.store &&  _.sum(target.store) >= creep.store.getCapacity()))
+    if(target && (target.store &&  target.store[RESOURCE_ENERGY] >= creep.store.getFreeCapacity(RESOURCE_ENERGY)))
         return target;
     
     target = null;
@@ -46,21 +46,18 @@ CreepRoleProxyCarrier.OffTarget = function(creep)
             for(var i in Memory.outpostNames[creep.memory.spawnRoom])
             {
                 if(Game.rooms[Memory.outpostNames[creep.memory.spawnRoom][i]] && !Game.rooms[Memory.outpostNames[creep.memory.spawnRoom][i]].find(FIND_HOSTILE_CREEPS, {filter: c => (c.body.length > 1)}).length)
-                    containers = containers.concat(Game.rooms[Memory.outpostNames[creep.memory.spawnRoom][i]].find(FIND_STRUCTURES, {filter: s => (s.structureType == STRUCTURE_CONTAINER && _.sum(s.store) >= creep.store.getCapacity() && !creep.OtherCreepsOnOffTarget(s.id))}));
+                    containers = containers.concat(Game.rooms[Memory.outpostNames[creep.memory.spawnRoom][i]].find(FIND_STRUCTURES, {filter: s => (s.structureType == STRUCTURE_CONTAINER && s.store[RESOURCE_ENERGY] > 0 && !creep.OtherCreepsOnOffTarget(s.id))}));
             }
             if(containers.length)
             {
-                containers = _.sortBy(containers, c => -(_.sum(c.store)));
-                if(containers[0].store[RESOURCE_ENERGY] >= creep.store.getCapacity())
-                {
-                    target = containers[0];
-                    creep.memory.proxyTarget = containers[0].pos.roomName;
-                }
+                containers = _.sortBy(containers, c => -(c.store[RESOURCE_ENERGY]));
+                target = containers[0];
+                creep.memory.proxyTarget = containers[0].pos.roomName;
             }
         }
     }else if(!target && creep.room.name == creep.memory.proxyTarget)
     {
-        var containers = creep.room.find(FIND_STRUCTURES, {filter: s => (s.structureType == STRUCTURE_CONTAINER && _.sum(s.store) >= creep.store.getCapacity())});
+        var containers = creep.room.find(FIND_STRUCTURES, {filter: s => (s.structureType == STRUCTURE_CONTAINER && s.store[RESOURCE_ENERGY] >= creep.store.getFreeCapacity(RESOURCE_ENERGY) && !creep.room.find(FIND_MY_CREEPS, {filter: c => (c.memory.role == creep.memory.role && c.memory.offTargetID == s.id)}).length)});
         if(containers.length)
         {
             containers = _.sortBy(containers, c => -(_.sum(c.store)));

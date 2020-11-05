@@ -116,14 +116,14 @@ var RunCreep = function(creep)
     }
 }
 
+var rubbleCountdown = 1000;
+
 //Max overall average CPU for a room (One below LV4): 6.84
 module.exports.loop = function ()
 {
 	cpuCounter.run();
 	
-	
     memoryManager.run();
-	cpuCounter.StartCount("Non-mem managers");
 	safeModeManager.run();
     spawnManager.run();
     towerManager.run();
@@ -131,7 +131,10 @@ module.exports.loop = function ()
 	proxyDefenderManager.run();
 	buildManager.run();
     autoBuildManager.run();
-    autoBuildRubbleManager.run();
+    if(rubbleCountdown <= 0)
+        autoBuildRubbleManager.run();
+    else
+        rubbleCountdown--;
     autoBuildWallsManager.run();
     autoBuildRoadManager.run();
     outpostManager.run();
@@ -148,7 +151,6 @@ module.exports.loop = function ()
     alertManager.run();
 	linkManager.run();
 	
-	cpuCounter.EndCount("Non-mem managers");
 	
     for(var name in Game.creeps)
         RunCreep(Game.creeps[name]);

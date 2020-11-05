@@ -37,8 +37,8 @@ CreepRoleDefender.Work = function(creep, target)
 }
 CreepRoleDefender.OffTarget = function(creep)
 {
-    if(Game.flags['defend' + creep.room.name])
-        return Game.flags['defend' + creep.room.name];
+    if(Game.flags['Defend' + creep.room.name])
+        return Game.flags['Defend' + creep.room.name];
     
     return null;
 }
