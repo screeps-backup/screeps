@@ -22,7 +22,10 @@ var AlertManager =
 			if(!(i in flagRoomNames) && Game.rooms[i].controller && Game.rooms[i].controller.my)
 				this.AlertHostileCreepAttack(Game.rooms[i]);
 		}
-		if(Game.time % 1400 == 0)
+		/*
+		if(Game.time % 100 == 0)
+		    Game.notify(new Date(Date.now()), 60);
+		if(Game.time % 100 == 0)
 		{
 		    for(var i in Game.rooms)
 		    {
@@ -30,6 +33,7 @@ var AlertManager =
 		            this.IssueReport(Game.rooms[i]);
 		    }
 		}
+		*/
     },
     AlertHostileCreepAttack: function(room)
     {

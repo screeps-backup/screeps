@@ -76,9 +76,6 @@ CreepRoleProxyBuilder.OffTarget = function(creep)
     
     target = creep.pos.findClosestByRange(FIND_STRUCTURES, {filter: s => (((s.structureType === STRUCTURE_CONTAINER && !s.pos.findInRange(FIND_STRUCTURES, 1, {filter: a => a.structureType === STRUCTURE_CONTROLLER}).length) || s.structureType === STRUCTURE_STORAGE) && s.store[RESOURCE_ENERGY] >= creep.store.getFreeCapacity(RESOURCE_ENERGY))});
     
-    if(!target)
-        target = creep.pos.findClosestByPath(FIND_SOURCES);
-    
     if(target)
     {
         creep.memory.offTargetID = target.id;

@@ -110,7 +110,10 @@ CreepRoleCarrier.OffWork = function(creep, target)
 {
     if(creep.pos.inRangeTo(target, 1))
     {
-        creep.withdraw(target, RESOURCE_ENERGY);
+        if(target.store)
+            creep.withdraw(target, RESOURCE_ENERGY);
+        else
+            creep.pickup(target);
     }else
     {
         creep.CivilianMove(target.pos, 1);

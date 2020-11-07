@@ -18,6 +18,7 @@ var ProxyBuilderManager =
                     {
                         if(this.BuildSite(r) == true && Game.rooms[r].storage && Game.rooms[r].storage.store[RESOURCE_ENERGY] >= 100000)
                         {
+                            Game.notify("PROXY STRUCTURE DESTROYED");
                             if(SpawnManager.GlobalCreepsByRole('proxyBuilder').filter(c => (c.memory.spawnRoom == r)).length < 1)
                             {
                                 var proxyBuilderBody = SpawnManager.SelectBody(normalSpawn.room.energyCapacityAvailable, [new CreepBody({numWork: 4, numCarry: 7, numMove: 11}), new CreepBody({numWork: 3, numCarry: 1, numMove: 4})]);
