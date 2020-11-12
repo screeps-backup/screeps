@@ -80,12 +80,34 @@ CreepRoleCarrier.OffTarget = function(creep)
         return target;
     
     target = null;
+	
+	if(creep.room.find(FIND_HOSTILE_CREEPS, {filter: c => (c.body.length > 1)}).length == 0)
+	{
+    	var tombstones = creep.room.find(FIND_TOMBSTONES, {filter: t => (t.store[RESOURCE_ENERGY] >= creep.store.getFreeCapacity(RESOURCE_ENERGY) / 2 && !creep.OtherCreepsOnOffTarget(t.id))});
+    	if(tombstones.length)
+    	{
+    		tombstones = _.sortBy(tombstones, t => -(t.store[RESOURCE_ENERGY]));
+    		target = tombstones[0];
+    	}
+    	
+    	if(!target)
+    	{
+    		var dropped = creep.room.find(FIND_DROPPED_RESOURCES, {filter: t => (t.resourceType === RESOURCE_ENERGY && t.amount >= creep.store.getFreeCapacity(RESOURCE_ENERGY) / 2 && !creep.OtherCreepsOnOffTarget(t.id))});
+    		if(dropped.length)
+    		{
+    			dropped = _.sortBy(dropped, t => -(t.amount));
+    			target = dropped[0];
+    		}
+    	}
+	}
     
-    
-    var mineContainers = creep.room.find(FIND_STRUCTURES, {filter: s => (s.structureType === STRUCTURE_CONTAINER && s.store[RESOURCE_ENERGY] >= creep.store.getFreeCapacity(RESOURCE_ENERGY) && s.pos.findInRange(FIND_SOURCES, 1).length)});
-    mineContainers = _.sortBy(mineContainers, m => m.store[RESOURCE_ENERGY]);
-    if(mineContainers.length)
-        target = mineContainers[mineContainers.length - 1];
+	if(!target)
+	{
+		var mineContainers = creep.room.find(FIND_STRUCTURES, {filter: s => (s.structureType === STRUCTURE_CONTAINER && s.store[RESOURCE_ENERGY] >= creep.store.getFreeCapacity(RESOURCE_ENERGY) && s.pos.findInRange(FIND_SOURCES, 1).length)});
+		mineContainers = _.sortBy(mineContainers, m => m.store[RESOURCE_ENERGY]);
+		if(mineContainers.length)
+			target = mineContainers[mineContainers.length - 1];
+	}
     
     if(!target)
         target = creep.pos.findClosestByRange(FIND_STRUCTURES, {filter: s => ( s.structureType === STRUCTURE_CONTAINER && !s.pos.findInRange(FIND_STRUCTURES, 1, {filter: a => (a.structureType === STRUCTURE_CONTROLLER)}).length && s.store[RESOURCE_ENERGY] >= creep.store.getFreeCapacity(RESOURCE_ENERGY))});

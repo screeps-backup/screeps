@@ -14,12 +14,24 @@ var ScoutManager =
                 {
                     for(var o in Memory.outpostNames[r])
                     {
-                        if(!Game.rooms[Memory.outpostNames[r][o]])
-                        {
-                            SpawnManager.SpawnScout(r, Memory.outpostNames[r][o]);
-                        }
+                        SpawnManager.SpawnScout(r, Memory.outpostNames[r][o]);
                     }
                 }
+            }
+        }
+        if(Game.flags['MilitarySpawn'] && Game.flags['PlaceBaseBash'])
+        {
+            if(Game.rooms[Game.flags['PlaceBaseBash'].pos.roomName])
+            {
+                if(Game.rooms[Game.flags['PlaceBaseBash'].pos.roomName].controller && Game.rooms[Game.flags['PlaceBaseBash'].pos.roomName].controller.owner && !Game.rooms[Game.flags['PlaceBaseBash'].pos.roomName].controller.my && !Game.rooms[Game.flags['PlaceBaseBash'].pos.roomName].controller.safeMode)
+                {
+                    Game.rooms[Game.flags['PlaceBaseBash'].pos.roomName].createFlag(25, 25, 'BaseBash', COLOR_RED, COLOR_RED);
+                    Game.notify("BaseBash placed at: " + Game.flags['PlaceBaseBash'].pos.roomName);
+                    Game.flags['PlaceBaseBash'].remove();
+                }
+            }else
+            {
+                SpawnManager.SpawnScout(Game.flags['MilitarySpawn'].pos.roomName, Game.flags['PlaceBaseBash'].pos.roomName);
             }
         }
     }

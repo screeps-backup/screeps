@@ -1,4 +1,4 @@
-
+//
 var cpuCounter = require("CPUCounter");
 var memoryManager = require("MemoryManager");
 var safeModeManager = require("SafeModeManager");
@@ -13,6 +13,7 @@ var autoBuildRoadManager = require("AutoBuildRoadManager");
 var autoBuildRubbleManager = require("AutoBuildRubbleManager");
 var outpostManager = require("OutpostManager");
 var scoutManager = require("ScoutManager");
+var mapperManager = require("MapperManager");
 var oneMinerManager = require("OneMinerManager");
 var proxyMinerManager = require("ProxyMinerManager");
 var proxyHaulerManager = require("ProxyHaulerManager");
@@ -24,6 +25,7 @@ var baseBasherManager = require("BaseBasherManager");
 var demolisherManager = require("DemolisherManager");
 var alertManager = require("AlertManager");
 var linkManager = require("LinkManager");
+var pixelManager = require("PixelManager");
 
 var creepRole = require("CreepRole");
 
@@ -34,6 +36,7 @@ var creepRoleCarrier = require("CreepRoleCarrier");
 var creepRoleLoader = require("CreepRoleLoader");
 
 var creepRoleScout = require("CreepRoleScout");
+var creepRoleMapper = require("CreepRoleMapper");
 
 var creepRoleMilitary = require("CreepRoleMilitary");
 
@@ -48,6 +51,13 @@ var creepRoleProxyMiner = require("CreepRoleProxyMiner");
 var creepRoleProxyCarrier = require("CreepRoleProxyCarrier");
 var creepRoleProxyBuilder = require("CreepRoleProxyBuilder");
 var creepRoleReserver = require("CreepRoleReserver");
+
+var myUsername = null;
+for(var i in Game.rooms)
+{
+    if(Game.rooms[i].controller && Game.rooms[i].controller.my)
+        myUsername = Game.rooms[i].controller.owner.username;
+}
 
 var RunCreep = function(creep)
 {
@@ -75,6 +85,9 @@ var RunCreep = function(creep)
 
         case 'scout':
             creepRoleScout.run(creep);
+            break;
+		case 'mapper':
+            creepRoleMapper.run(creep);
             break;
             
         case 'defender':
@@ -139,6 +152,7 @@ module.exports.loop = function ()
     autoBuildRoadManager.run();
     outpostManager.run();
     scoutManager.run();
+	mapperManager.run();
     oneMinerManager.run();
     proxyMinerManager.run();
     proxyHaulerManager.run();
@@ -150,7 +164,7 @@ module.exports.loop = function ()
     demolisherManager.run();
     alertManager.run();
 	linkManager.run();
-	
+	pixelManager.run();
 	
     for(var name in Game.creeps)
         RunCreep(Game.creeps[name]);

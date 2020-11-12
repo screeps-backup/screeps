@@ -36,18 +36,23 @@ CreepRoleUpgrader.OffTarget = function(creep)
     if(target && ((target.energy && target.energy > 0) | (target.store && target.store[RESOURCE_ENERGY] >= creep.store.getFreeCapacity(RESOURCE_ENERGY))))
         return target;
     
+    target = null;
+    
     target = creep.room.controller.pos.findInRange(FIND_MY_STRUCTURES, 1, {filter: s => (s.structureType === STRUCTURE_LINK && s.energy > 0)})[0] || null;
     
     if(!target && (!creep.room.storage || (creep.room.storage && creep.room.storage.store[RESOURCE_ENERGY] < 150000)))
     {
-        if(creep.room.controller && creep.room.controller.level >= 4)
+        if(creep.room.controller && creep.room.controller.level >= 4 && creep.room.storage && creep.room.storage.store[RESOURCE_ENERGY] >= 100000)
             target = creep.room.controller.pos.findClosestByRange(FIND_STRUCTURES, {filter: s => s.structureType == STRUCTURE_CONTAINER});
         else
             target = creep.pos.findClosestByRange(FIND_STRUCTURES, {filter: s => ((s.structureType === STRUCTURE_CONTAINER || s.structureType === STRUCTURE_STORAGE) && s.store[RESOURCE_ENERGY] >= creep.store.getFreeCapacity(RESOURCE_ENERGY))});
         
-        if(!target)
+        if(!target && creep.room.find(FIND_MY_CREEPS, {filter: c => (c.memory.role === 'miner')}).length == 0)
             target = creep.pos.findClosestByPath(FIND_SOURCES);
     }
+    
+    if(!target)
+        target = creep.room.controller.pos.findInRange(FIND_STRUCTURES, 1, {filter: s => (s.structureType == STRUCTURE_CONTAINER)})[0] || null;
     
     if(target)
     {

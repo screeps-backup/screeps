@@ -3,7 +3,6 @@ var creepRoleBuilder = require("CreepRoleBuilder");
 var CreepRoleProxyBuilder = Object.create(creepRoleBuilder);
 CreepRoleProxyBuilder.run = function(creep)
 {
-    
     if(creep.RunAway() == true)
         return;
     
@@ -15,6 +14,9 @@ CreepRoleProxyBuilder.run = function(creep)
 		creep.CivilianExitMove(creep.memory.proxyTarget);
     else
         creepRoleBuilder.run.call(this, creep);
+        
+    if(creep.room.name != creep.memory.spawnRoom && (creep.pos.x == 0 | creep.pos.x == 49 | creep.pos.y == 0 | creep.pos.y == 49))
+        creep.AvoidEdges();
 }
 CreepRoleProxyBuilder.WorkTarget = function(creep)
 {
@@ -46,21 +48,24 @@ CreepRoleProxyBuilder.WorkTarget = function(creep)
             return target;
         }
     }
-    if(!target)
+    if(!target && (!creep.memory.proxyTarget || (creep.memory.proxyTarget && creep.room.name == creep.memory.proxyTarget)))
     {
-        for(var a in Memory.outpostNames[creep.memory.spawnRoom])
+        if(Game.time % 10 == 0)
         {
-            if(Game.rooms[Memory.outpostNames[creep.memory.spawnRoom][a]] && !Game.rooms[Memory.outpostNames[creep.memory.spawnRoom][a]].find(FIND_HOSTILE_CREEPS, {filter: c => (c.body.length > 1)}).length)
+            for(var a in Memory.outpostNames[creep.memory.spawnRoom])
             {
-                if(Game.rooms[Memory.outpostNames[creep.memory.spawnRoom][a]].find(FIND_MY_CONSTRUCTION_SITES).length)
+                if(Game.rooms[Memory.outpostNames[creep.memory.spawnRoom][a]] && !Game.rooms[Memory.outpostNames[creep.memory.spawnRoom][a]].find(FIND_HOSTILE_CREEPS, {filter: c => (c.body.length > 1)}).length)
                 {
-                    creep.memory.proxyTarget = Memory.outpostNames[creep.memory.spawnRoom][a];
-                    return;
-                }
-                if(Game.rooms[Memory.outpostNames[creep.memory.spawnRoom][a]].find(FIND_STRUCTURES, {filter: s => (s.hits && (s.structureType === STRUCTURE_ROAD || s.structureType === STRUCTURE_CONTAINER) && s.hits <= s.hitsMax - creep.store.getCapacity(RESOURCE_ENERGY) * 100)}).length)
-                {
-                    creep.memory.proxyTarget = Memory.outpostNames[creep.memory.spawnRoom][a];
-                    return;
+                    if(Game.rooms[Memory.outpostNames[creep.memory.spawnRoom][a]].find(FIND_MY_CONSTRUCTION_SITES).length)
+                    {
+                        creep.memory.proxyTarget = Memory.outpostNames[creep.memory.spawnRoom][a];
+                        return;
+                    }
+                    if(Game.rooms[Memory.outpostNames[creep.memory.spawnRoom][a]].find(FIND_STRUCTURES, {filter: s => (s.hits && (s.structureType === STRUCTURE_ROAD || s.structureType === STRUCTURE_CONTAINER) && s.hits <= s.hitsMax - Math.min(s.hitsMax / 2, creep.store.getCapacity(RESOURCE_ENERGY) * 100))}).length)
+                    {
+                        creep.memory.proxyTarget = Memory.outpostNames[creep.memory.spawnRoom][a];
+                        return;
+                    }
                 }
             }
         }

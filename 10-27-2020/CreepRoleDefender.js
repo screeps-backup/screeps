@@ -9,7 +9,7 @@ CreepRoleDefender.WorkTarget = function(creep)
         return creep.pos.findClosestByRange(FIND_HOSTILE_CREEPS, {filter: c => (c.body.length > 1)});
     }else
     {
-        if(!this.OffTarget(creep) || (this.OffTarget(creep) && creep.room.find(FIND_MY_CREEPS, {filter: c => (c.memory.role == creep.memory.role && c.pos.inRangeTo(this.OffTarget(creep).pos, 4))}).length >= 3))
+        if(!this.OffTarget(creep) || (this.OffTarget(creep) && creep.memory.numDefenders && creep.room.find(FIND_MY_CREEPS, {filter: c => (c.memory.role == creep.memory.role && c.pos.inRangeTo(this.OffTarget(creep).pos, 4))}).length >= creep.memory.numDefenders))
         {
             creep.memory.defend = true;
         }

@@ -52,6 +52,10 @@ Creep.prototype.AllignWithHealer = function()
 //May have civlian applications which is why it's a general prototype
 Creep.prototype.MilitaryMove = function(targetPos, range=1)
 {
+	if(!targetPos)
+		return;
+	
+	
 	if(this.memory.inPathID && !Game.getObjectById(this.memory.inPathID))
 		delete this.memory.inPathID;
 	//Don't move if you're at the target or there's a structure blocking your path
@@ -161,7 +165,7 @@ Creep.prototype.Garrison = function(targetAllies, endProxyTarget)
 	
 	if(this.room.name != endProxyTarget && this.memory.proxyExit && Game.map.describeExits(this.room.name)[this.memory.proxyExit] == endProxyTarget)
 	{
-	    if(this.room.find(FIND_MY_CREEPS, {filter: c => (c.memory.role == this.memory.role && c.fatigue == 0 && c.hits == c.hitsMax && (!c.memory.proxyExit || (c.memory.proxyExit && c.pos.findClosestByRange(c.memory.proxyExit).inRangeTo(c.pos, 2))))}).length >= targetAllies)
+	    if(this.room.find(FIND_MY_CREEPS, {filter: c => (c.memory.role == this.memory.role && c.fatigue == 0 && c.hits == c.hitsMax && (!c.memory.proxyExit || (c.memory.proxyExit && c.pos.findClosestByRange(c.memory.exitPos) && c.pos.findClosestByRange(c.memory.proxyExit).inRangeTo(c.pos, 2))))}).length >= targetAllies)
 	    {
 			var creeps = this.room.find(FIND_MY_CREEPS, {filter: c => (c.memory.role == this.memory.role)});
 	        for(var c in creeps)

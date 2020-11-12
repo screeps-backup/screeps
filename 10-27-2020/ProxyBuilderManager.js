@@ -2,6 +2,9 @@ var CreepBody = require('CreepBody');
 var SpawnManager = require('SpawnManager');
 var OutpostManager = require('OutpostManager');
 var defenderManager = require('DefenderManager');
+var baseBasherManager = require('BaseBasherManager');
+
+//Make base builder a seperate type of creep
 
 var ProxyBuilderManager = 
 {
@@ -16,9 +19,8 @@ var ProxyBuilderManager =
                     var normalSpawn = Game.rooms[r].find(FIND_MY_SPAWNS, {filter: s => (s.name.startsWith("Spawn") && !s.spawnCooldownTime)})[0];
                     if(normalSpawn)
                     {
-                        if(this.BuildSite(r) == true && Game.rooms[r].storage && Game.rooms[r].storage.store[RESOURCE_ENERGY] >= 100000)
+                        if(this.BuildSite(r) == true && Game.rooms[r].storage && Game.rooms[r].storage.store[RESOURCE_ENERGY] >= 100000 && baseBasherManager.SpawnDone(r) == true)
                         {
-                            Game.notify("PROXY STRUCTURE DESTROYED");
                             if(SpawnManager.GlobalCreepsByRole('proxyBuilder').filter(c => (c.memory.spawnRoom == r)).length < 1)
                             {
                                 var proxyBuilderBody = SpawnManager.SelectBody(normalSpawn.room.energyCapacityAvailable, [new CreepBody({numWork: 4, numCarry: 7, numMove: 11}), new CreepBody({numWork: 3, numCarry: 1, numMove: 4})]);

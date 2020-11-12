@@ -4,7 +4,7 @@ var spawnManager = require("SpawnManager");
 var alertManager = require("AlertManager");
 var defenderManager = require("DefenderManager");
 
-var proxyDefenderBodies = [new CreepBody({numTough: 7, numMove: 13, numRangedAttack: 1, numAttack: 5}), new CreepBody({numMove: 2, numAttack: 2})]
+var proxyDefenderBodies = [new CreepBody({numTough: 1, numMove: 13, numRangedAttack: 2, numAttack: 10}), new CreepBody({numTough: 7, numMove: 13, numRangedAttack: 1, numAttack: 5}), new CreepBody({numMove: 2, numAttack: 2})]
 
 var ProxyDefenderManager = 
 {
@@ -39,45 +39,54 @@ var ProxyDefenderManager =
 						if(proxyDefenderBody)
 						{
 							var targetValue = alertManager.HostilesValue(Game.rooms[Memory.outpostNames[roomName][a]]);
-							targetValue = Math.round(targetValue * 1.2);
+							targetValue = targetValue * 1.15;
 							
 							var buildCost = spawnManager.BuildCost(proxyDefenderBody);
 							if(buildCost > 0)
 							{
-								var targetUnits = targetValue / buildCost;
-								if(targetUnits < 1 && targetValue > 0)
+								var targetUnits = Math.ceil(targetValue / buildCost);
+								while(proxyDefenderBody.length * 3 * targetUnits > 1000)
+							    {
+							        targetUnits--;
+							    }
+								if(targetUnits < 1)
 									targetUnits = 1;
+								this.targetUnits[roomName] = targetUnits;
 								
-								Game.notify('PROXY UNDER ATTACK (' + Game.time.toString() + '): ' + Memory.outpostNames[roomName][a], 30);
-								console.log('PROXY UNDER ATTACK (' + Game.time.toString() + '): ' + Memory.outpostNames[roomName][a]);
-								if(targetUnits <= 9)
-								{
 									
-									//Set the proxy target after the spawning is done
-									if(!spawnManager.GlobalCreeps().filter(c => (c.memory.role == 'proxyDefender' && c.memory.proxyTarget == Memory.outpostNames[roomName][a])).length)
+								//Set the proxy target after the spawning is done
+								if(!spawnManager.GlobalCreeps().filter(c => (c.memory.role == 'proxyDefender' && c.memory.proxyTarget == Memory.outpostNames[roomName][a])).length)
+								{
+									var currentUnits = Game.rooms[roomName].find(FIND_MY_CREEPS, {filter: c => (c.memory.role == 'proxyDefender' && !c.memory.proxyTarget)}) || [];
+									if(currentUnits.length < targetUnits)
 									{
-										var currentUnits = Game.rooms[roomName].find(FIND_MY_CREEPS, {filter: c => (c.memory.role == 'proxyDefender' && !c.memory.proxyTarget)}) || [];
-										if(currentUnits.length < targetUnits)
+										//Spawn with garrised = false
+										this.defendersSpawnDone[Memory.outpostNames[roomName][a]] = false;
+										spawnManager.SpawnCreep(spawn, 'proxyDefender', proxyDefenderBody, {garrisoned: false, numGarrison: null});
+									}else
+									{
+										for(var i in currentUnits)
 										{
-											//Spawn with garrised = false
-											this.defendersSpawnDone[Memory.outpostNames[roomName][a]] = false;
-											spawnManager.SpawnCreep(spawn, 'proxyDefender', proxyDefenderBody, {garrisoned: false, numGarrison: null});
-										}else
-										{
-											for(var i in currentUnits)
-											{
-												currentUnits[i].memory.garrisonTarget = Memory.outpostNames[roomName][a];
-												currentUnits[i].memory.numGarrison = targetUnits;
-											}
-											this.defendersSpawnDone[Memory.outpostNames[roomName][a]] = true;
+											currentUnits[i].memory.garrisonTarget = Memory.outpostNames[roomName][a];
+											currentUnits[i].memory.numGarrison = targetUnits;
 										}
+										this.defendersSpawnDone[Memory.outpostNames[roomName][a]] = true;
 									}
 								}
 							}
 						}
+					}else if(this.targetUnits[Memory.outpostNames[roomName][a]] && this.targetUnits[Memory.outpostNames[roomName][a]] > 0)
+					{
+					    var currentUnits = Game.rooms[roomName].find(FIND_MY_CREEPS, {filter: c => (c.memory.role == 'proxyDefender' && !c.memory.proxyTarget)}) || [];
+    					if(currentUnits.length < this.targetUnits[Memory.outpostNames[roomName][a]])
+    					{
+    						//Spawn with garrised = false
+    						this.defendersSpawnDone[Memory.outpostNames[roomName][a]] = false;
+    						spawnManager.SpawnCreep(spawn, 'proxyDefender', proxyDefenderBody, {garrisoned: false, numGarrison: null});
+    					}
 					}else
 					{
-						this.defendersSpawnDone[Memory.outpostNames[roomName][a]] = true;
+					    this.defendersSpawnDone[Memory.outpostNames[roomName][a]] = true;
 					}
 				}
 			}
@@ -98,5 +107,6 @@ var ProxyDefenderManager =
 	}
 }
 ProxyDefenderManager.defendersSpawnDone = [];
+ProxyDefenderManager.targetUnits = [];
 
 module.exports = ProxyDefenderManager;

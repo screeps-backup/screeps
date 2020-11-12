@@ -16,10 +16,10 @@ var TowerManager =
                     hostiles = Game.rooms[r].find(FIND_HOSTILE_CREEPS, {filter: c => (c.body.length > 1)});
                     if(hostiles.length)
                     {
+						target = this.TargetHostile(towers, hostiles);
                         for(var t in towers)
                         {
-                            closestHostile = towers[t].pos.findClosestByRange(hostiles);
-                            towers[t].attack(closestHostile);
+                            towers[t].attack(target);
                         }
                     }else
                     {
@@ -77,7 +77,30 @@ var TowerManager =
                 }
             }
         }
-    }
+    },
+	TargetHostile: function(towers, hostiles)
+	{
+		if(hostiles.length == 0 | towers.length == 0)
+			return;
+		
+		var towerDistances = [];
+		for(var h in hostiles)
+		{
+			towerDistances.push(0);
+			for(var t in towers)
+			{
+				towerDistances[towerDistances.length - 1] += towers[t].pos.getRangeTo(hostiles[h].pos);
+			}
+		}
+		var index = 0;
+		for(var i = 1; i < hostiles.length; i++)
+		{
+			if(towerDistances[i] < towerDistances[index])
+				index = i;
+		}
+		
+		return hostiles[index];
+	}
 }
 
 module.exports = TowerManager;

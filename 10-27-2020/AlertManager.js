@@ -6,6 +6,18 @@ var AlertManager =
 {
     run: function()
     {
+        for(var i in Memory.outpostNames)
+        {
+            for(var a in Memory.outpostNames[i])
+            {
+                if(Game.rooms[Memory.outpostNames[i][a]] && Game.rooms[Memory.outpostNames[i][a]].find(FIND_HOSTILE_CREEPS, {filter: c => (c.body.length > 1 && c.owner.username !== "Invader")}).length > 0)
+                {
+                    Game.notify('PROXY UNDER ATTACK: ' + Memory.outpostNames[i][a], 15);
+					console.log('PROXY UNDER ATTACK: ' + Memory.outpostNames[i][a]);
+                }
+            }
+        }
+        
         var flagRoomNames = [];
         for(var i in Game.flags)
         {
@@ -21,6 +33,33 @@ var AlertManager =
 		{
 			if(!(i in flagRoomNames) && Game.rooms[i].controller && Game.rooms[i].controller.my)
 				this.AlertHostileCreepAttack(Game.rooms[i]);
+		}
+		if(Game.time % 50 == 0)
+		{
+		    for(var i in Game.creeps)
+		    {
+	            Game.creeps[i].notifyWhenAttacked(false);
+		    }
+		}
+		
+		if(Game.flags['Report'])
+		{
+		    var roomName = Game.flags['Report'].pos.roomName;
+		    if(Game.rooms[roomName])
+		    {
+		        if(Game.rooms[roomName].controller && Game.rooms[roomName].controller.my)
+		        {
+		            this.BaseReport(Game.rooms[roomName]);
+		        }else
+		        {
+		            this.OutpostReport(Game.rooms[roomName]);
+		        }
+		    }
+		}
+		
+		for(var i in Game.rooms)
+		{
+		    this.AlertDeaths(Game.rooms[i]);
 		}
 		/*
 		if(Game.time % 100 == 0)
@@ -39,7 +78,7 @@ var AlertManager =
     {
         if(room.find(FIND_HOSTILE_CREEPS, {filter: c => (c.body.length > 1 && c.owner.username !== "Invader")}).length)
         {
-            Game.notify("ATTACK AT: " + room.name, 30);
+            Game.notify("ATTACK AT: " + room.name, 10);
             console.log("ATTACK AT: " + room.name);
         }
     },
@@ -140,12 +179,74 @@ var AlertManager =
 		
 		return toReturn;
 	},
-	IssueReport: function(room)
+	BaseReport: function(room)
 	{
-	    if(room.storage)
+	    if(Game.time % 650 == 0)
 	    {
-	        Game.notify("Energy storage (" + room.name + "): " + room.storage.store[RESOURCE_ENERGY].toString(), 60);
+    	    if(room.storage)
+    	    {
+    	        if(this.previousStorageEnergy)
+    	        {
+    	            Game.notify("Storage energy profit (" + room.name + "): " + (room.storage.store[RESOURCE_ENERGY] - this.previousStorageEnergy), 10);
+    	            this.previousStorageEnergy = room.storage.store[RESOURCE_ENERGY];
+    	        }else
+    	        {
+    	            Game.notify("Inital storage energy (" + room.name + "): " + room.storage.store[RESOURCE_ENERGY], 10);
+    	            this.previousStorageEnergy = room.storage.store[RESOURCE_ENERGY];
+    	        }
+    	    }else
+    	    {
+    	        Game.notify("No storage: " + room.name, 10);
+    	    }
+			
+			var barriers = room.find(FIND_STRUCTURES, {filter: s => (s.hits && (s.structureType === STRUCTURE_WALL || s.structureType === STRUCTURE_RAMPART))});
+			if(barriers.length)
+			{
+				barriers = _.sortBy(barriers, b => (b.hits));
+				Game.notify("Weakest barrier: " + Math.round(barriers[0].hits / 1000).toString() + "K", 10);
+			}else
+			{
+				Game.notify("No barriers: " + room.name, 10);
+			}
 	    }
+	},
+	OutpostReport: function(room)
+	{
+	    //Report the amount of energy left when the sources are about to respawn
+	    sources = room.find(FIND_SOURCES);
+	    if(sources.length)
+	    {
+	        for(var i in sources)
+	        {
+	            if(sources[i].ticksToRegeneration == 1)
+	            {
+	                Game.notify("Harvested " + (sources[i].energyCapacity - sources[i].energy) + "energy at " + room.name);
+	            }
+	        }
+	    }
+	},
+	AlertDeaths: function(room)
+	{
+	    var myDeaths = room.find(FIND_TOMBSTONES, {filter: t => (t.creep.my == true && t.creep.ticksToLive !== 1 && t.deathTime == Game.time - 1 && !t.creep.name.startsWith("Mapper"))});
+	    for(var i in myDeaths)
+	    {
+	        Game.notify(myDeaths[i].creep.name + " died at " + room.name, 5);
+	        console.log(myDeaths[i].creep.name + " died at " + room.name);
+	    }
+	    var theirDeaths = room.find(FIND_TOMBSTONES, {filter: t => (!t.creep.name.includes("Scout") && t.creep.my == false && t.creep.ticksToLive !== 1 && t.deathTime == Game.time - 1)});
+	    for(var i in theirDeaths)
+	    {
+	        if([i].pos.findInRange(FIND_MY_CREEPS, 1).length > 0)
+	        {
+    	        Game.notify("You killed " + theirDeaths[i].creep.owner.username + "'s " + theirDeaths[i].creep.name + " at " + room.name, 5);
+    	        console.log("You killed " + theirDeaths[i].creep.owner.username + "'s " + theirDeaths[i].creep.name + " at " + room.name);
+	        }else
+	        {
+	            Game.notify(theirDeaths[i].creep.owner.username + "'s " + theirDeaths[i].creep.name + " died at " + room.name, 5);
+    	        console.log(theirDeaths[i].creep.owner.username + "'s " + theirDeaths[i].creep.name + " died at " + room.name);
+	        }
+	    }
+	    
 	}
 }
 Memory.defendTimes = [];

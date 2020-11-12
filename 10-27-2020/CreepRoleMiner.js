@@ -87,10 +87,13 @@ CreepRoleMiner.OffWork = function(creep, target)
         creep.build(target);
     }else if(!(target instanceof StructureContainer) && creep.pos.inRangeTo(target, 1))
     {
-        creep.transfer(target, RESOURCE_ENERGY);
+	    creep.transfer(target, RESOURCE_ENERGY);
     }else if((target instanceof StructureContainer) && creep.pos.inRangeTo(target, 0))
     {
-        creep.transfer(target, RESOURCE_ENERGY);
+        if(target.store.getFreeCapacity(RESOURCE_ENERGY) == 0 && target.hits < target.hitsMax)
+			creep.repair(target);
+		else
+            creep.transfer(target, RESOURCE_ENERGY);
     }else
     {
         creep.CivilianMove(target.pos, 0);

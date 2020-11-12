@@ -8,13 +8,13 @@ CreepRoleOneMiner.run = function(creep)
         return;
     
     var isWorking = this.IsWorking(creep);
-    if(_.sum(creep.store) == 0 && (creep.room.name !== creep.memory.proxyTarget && Game.rooms[creep.memory.proxyTarget] && !Game.rooms[creep.memory.proxyTarget].find(FIND_HOSTILE_CREEPS, {filter: c => (c.body.length > 0)}).length))
+    if(_.sum(creep.store) == 0 && (creep.room.name !== creep.memory.proxyTarget && Game.rooms[creep.memory.proxyTarget] && Game.rooms[creep.memory.proxyTarget].find(FIND_HOSTILE_CREEPS, {filter: c => (c.body.length > 1)}).length == 0))
     {
-        creep.CivilianExitMove(creep.memory.proxyTarget);;
+        creep.CivilianExitMove(creep.memory.proxyTarget);
     }else if(_.sum(creep.store) < creep.store.getCapacity() && creep.room.name != creep.memory.spawnRoom)
     {
         creepRoleMiner.run.call(this, creep);
-    }else if(creep.room.name == creep.memory.spawnRoom)
+    }else if(isWorking == false && creep.room.name == creep.memory.spawnRoom)
     {
         if(creep.pos.inRangeTo(creep.room.controller, 3))
         {
@@ -31,10 +31,19 @@ CreepRoleOneMiner.run = function(creep)
 CreepRoleOneMiner.IsWorking = function(creep)
 {
     var isWorking = creep.memory.isWorking;
-	creepRoleMiner.IsWorking.call(this, creep);
+	if(isWorking === true)
+    {
+        if(_.sum(creep.store) == creep.store.getCapacity())
+            isWorking = false;
+    }else
+    {
+        if(_.sum(creep.store) == 0)
+            isWorking = true;
+    }
     if (isWorking == true && creep.memory.isWorking == false)
         delete creep.memory.workTargetID;
     
+    creep.memory.isWorking = isWorking;
     return creep.memory.isWorking;
 }
 CreepRoleOneMiner.WorkTarget = function(creep)

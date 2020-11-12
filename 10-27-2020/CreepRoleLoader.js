@@ -1,3 +1,4 @@
+
 var creepRole = require('CreepRole');
 
 var linkManager = require("LinkManager");
@@ -43,7 +44,7 @@ CreepRoleLoader.WorkTarget = function(creep)
     		    target = loaderLink;
     	}
     	
-    	if(!target && !creep.room.find(FIND_MY_STRUCTURES, {filter: s => (s.structureType === STRUCTURE_LINK)}).length && creep.room.storage && creep.room.storage.store[RESOURCE_ENERGY] >= 150000)
+    	if(!target && creep.room.controller && creep.room.storage && creep.room.storage.pos.inRangeTo(creep.room.controller.pos, 10) && creep.room.storage.store[RESOURCE_ENERGY] >= 150000)
     	    target = creep.room.controller.pos.findInRange(FIND_STRUCTURES, 1, {filter: s => (s.structureType === STRUCTURE_CONTAINER && s.store.getFreeCapacity(RESOURCE_ENERGY) >= creep.store[RESOURCE_ENERGY])})[0] || null;
     }
     
@@ -86,15 +87,7 @@ CreepRoleLoader.OffTarget = function(creep)
     target = null;
     
     
-    target = creep.pos.findClosestByRange(FIND_STRUCTURES, {filter: s => (((s.structureType === STRUCTURE_CONTAINER && !s.pos.findInRange(FIND_STRUCTURES, 1, {filter: a => (a.structureType === STRUCTURE_CONTROLLER)}).length) || s.structureType === STRUCTURE_STORAGE) && s.store[RESOURCE_ENERGY] > 0)});
-    
-    if(!target)
-    {
-        var mineContainers = creep.room.find(FIND_STRUCTURES, {filter: s => (s.structureType === STRUCTURE_CONTAINER && s.store[RESOURCE_ENERGY] > 0 && s.pos.findInRange(FIND_SOURCES, 1).length)});
-        mineContainers = _.sortBy(mineContainers, m => m.store[RESOURCE_ENERGY]);
-        if(mineContainers.length)
-            target = mineContainers[mineContainers.length - 1];
-    }
+    target = creep.pos.findClosestByRange(FIND_STRUCTURES, {filter: s => (((s.structureType === STRUCTURE_CONTAINER && s.pos.findInRange(FIND_STRUCTURES, 1, {filter: a => (a.structureType === STRUCTURE_CONTROLLER)}).length == 0 && s.store[RESOURCE_ENERGY] >= creep.store.getCapacity(RESOURCE_ENERGY)) || (s.structureType === STRUCTURE_STORAGE && s.store[RESOURCE_ENERGY] > 0)))});
         
     
     if(target)

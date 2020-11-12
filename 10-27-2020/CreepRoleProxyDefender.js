@@ -40,5 +40,11 @@ CreepRoleProxyDefender.WorkTarget = function(creep)
 	
 	return null;
 }
+CreepRoleProxyDefender.OffTarget = function(creep)
+{
+    if(creep.room.name != creep.memory.spawnRoom)
+        creep.CivilianExitMove(creep.memory.spawnRoom);
+    return null;
+}
 
 module.exports = CreepRoleProxyDefender;

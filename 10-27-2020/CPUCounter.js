@@ -13,25 +13,24 @@ var CPUCounter =
     		if(this.countName !== null && this.CPUCounts.length > 0)
     		{
     		    console.log("Count name: " + this.countName);
-    			Game.notify("Count name: " + this.countName);
     			
     			var overallTotal = 0;
     			for(var i in this.overallTotals)
     				overallTotal += this.overallTotals[i];
     			console.log("Count overall average: " + this.RoundResult(overallTotal / this.overallTotals.length));
-    			Game.notify("Count  overall average: " + this.RoundResult(overallTotal / this.overallTotals.length));
+    			Game.notify("Count  overall(" + this.countName + ") average: " + this.RoundResult(overallTotal / this.overallTotals.length));
     			
     			var max = 0;
     			for(var i in this.overallTotals)
     				max = Math.max(max, this.overallTotals[i]);
     			console.log("Count max total: " + this.RoundResult(max));
-    			Game.notify("Count max total: " + this.RoundResult(max));
+    			Game.notify("Count max total (" + this.countName + "): " + this.RoundResult(max));
     			
     			var min = Infinity;
     			for(var i in this.overallTotals)
     				min = Math.min(min, this.overallTotals[i]);
     			console.log("Count min: " + this.RoundResult(min));
-    			Game.notify("Count min: " + this.RoundResult(min));
+    			Game.notify("Count min (" + this.countName + "): " + this.RoundResult(min));
     			
     			this.overallTotals = [];
     		}

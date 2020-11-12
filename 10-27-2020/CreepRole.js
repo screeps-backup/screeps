@@ -7,6 +7,22 @@ Creep.prototype.OtherCreepsOnWorkTarget = function(targetID)
 	}
 	return false;
 }
+Creep.prototype.LeastOtherCreepsOnWorkTarget = function(targets)
+{
+    var numOnTargets = [];
+    for(var i in targets)
+    {
+        numOnTargets[targets[i].id] = 0;
+        for(var a in Game.creeps)
+        {
+            if(Game.creeps[a].name != this.name && Game.creeps[a].memory.role == this.memory.role && Game.creeps[a].memory.workTargetID == targets[i].id)
+                numOnTargets[targets[i].id]++;
+        }
+    }
+    
+    
+    return SortLeast(targets, numOnTargets);
+}
 Creep.prototype.OtherCreepsOnOffTarget = function(targetID)
 {
 	for(var i in Game.creeps)
@@ -15,6 +31,55 @@ Creep.prototype.OtherCreepsOnOffTarget = function(targetID)
 			return true;
 	}
 	return false;
+}
+Creep.prototype.LeastOtherCreepsOnOffTarget = function(targets)
+{
+    var numOnTargets = [];
+    for(var i in targets)
+    {
+        numOnTargets[targets[i].id] = 0;
+        for(var a in Game.creeps)
+        {
+            if(Game.creeps[a].name != this.name && Game.creeps[a].memory.role == this.memory.role && Game.creeps[a].memory.offTargetID == targets[i].id)
+                numOnTargets[targets[i].id]++;
+        }
+    }
+    
+    
+    return SortLeast(targets, numOnTargets);
+}
+var SortLeast = function(targets, numOnTargets)
+{
+    if(targets.length)
+    {
+        var lowestOnTarget = numOnTargets[targets[0].id];
+        for(var i in targets)
+        {
+            if(numOnTargets[targets[i].id] < lowestOnTarget)
+                lowestOnTarget = numOnTargets[targets[i].id];
+        }
+        var newNumOnTargets = [];
+        for(var i in targets)
+        {
+            if(numOnTargets[targets[i].id] == lowestOnTarget)
+            {
+                newNumOnTargets[targets[i].id] = numOnTargets[targets[i].id];
+            }
+        }
+        numOnTargets = newNumOnTargets;
+        
+        
+        var toReturn = [];
+        //Otherwise just pick the last one
+        for(var key in numOnTargets)
+        {
+            toReturn.push(Game.getObjectById(key));
+        }
+        
+        return toReturn;
+    }
+    
+    return [];
 }
 Creep.prototype.ResetMemory = function()
 {
@@ -77,13 +142,19 @@ Creep.prototype.PathBlocked = function()
 	
 	return false;
 }
-Creep.prototype.CivilianMove = function(targetPos, range=1, maxSaveMoves=5)
+Creep.prototype.CivilianMove = function(targetPos, range=0, maxSaveMoves=5)
 {
 	if(!targetPos)
 		return;
-		
-	this.moveTo(targetPos, {reusePath:maxSaveMoves});
-	return;
+	
+	if(this.room.find(FIND_HOSTILE_CREEPS, {filter: c => (c.owner.username === 'Source Keeper')}).length == 0 | (range == 0 && this.pos.inRangeTo(targetPos, 1)))
+	{
+	    if(targetPos.roomName == this.room.name)
+    	    this.moveTo(targetPos, {reusePath:maxSaveMoves, maxRooms: 1});
+    	else
+    	    this.moveTo(targetPos, {reusePath:maxSaveMoves});
+    	return;
+	}
 	
 	if(this.room.name !== targetPos.roomName | !this.pos.inRangeTo(targetPos, range))
 	{
@@ -124,22 +195,44 @@ Creep.prototype.CivilianMove = function(targetPos, range=1, maxSaveMoves=5)
 						costs.set(struct.pos.x, struct.pos.y, 0xff);
 					  }
 					});
-					room.find(FIND_MY_CONSTRUCTION_SITES).forEach(function(struct){
+					room.find(FIND_CONSTRUCTION_SITES).forEach(function(struct){
 						if(struct.structureType !== STRUCTURE_RAMPART && struct.structureType !== STRUCTURE_ROAD && struct.structureType !== STRUCTURE_CONTAINER)
 							costs.set(struct.pos.x, struct.pos.y, 0xff);
 					});
 					room.find(FIND_HOSTILE_CREEPS).forEach(function(c){
 						costs.set(c.pos.x, c.pos.y, 0xff);
 					});
-					room.find(FIND_HOSTILE_CREEPS, {filter: c => (c.owner.username === 'Source Keeper')}).forEach(function(c){
-						for(var x = -3; x < 3; x++)
-						{
-							for(var y = -3; y < 3; y++)
-							{
-								costs.set(c.pos.x + x, c.pos.y + y, 0xff);
-							}
-						}
-					});
+					var keepers = room.find(FIND_HOSTILE_CREEPS, {filter: c => (c.owner.username === 'Source Keeper')});
+					if(keepers.length)
+					{
+    					keepers.forEach(function(c){
+    						for(var x = -4; x < 4; x++)
+    						{
+    							for(var y = -4; y < 4; y++)
+    							{
+    								costs.set(c.pos.x + x, c.pos.y + y, 0xff);
+    							}
+    						}
+    					});
+    					room.find(FIND_MINERALS).forEach(function(c){
+    						for(var x = -4; x < 4; x++)
+    						{
+    							for(var y = -4; y < 4; y++)
+    							{
+    								costs.set(c.pos.x + x, c.pos.y + y, 0xff);
+    							}
+    						}
+    					});
+    					room.find(FIND_HOSTILE_STRUCTURES, {filter: s => (s.owner == 'Source Keeper')}).forEach(function(c){
+    						for(var x = -4; x < 4; x++)
+    						{
+    							for(var y = -4; y < 4; y++)
+    							{
+    								costs.set(c.pos.x + x, c.pos.y + y, 0xff);
+    							}
+    						}
+    					});
+					}
 					if(self.pos.findInRange(FIND_MY_CREEPS, 1).length > 1)
 					{
     					room.find(FIND_MY_CREEPS, {filter: c => (c.pos.inRangeTo(self, 2))}).forEach(function(c){
@@ -168,7 +261,7 @@ Creep.prototype.CivilianMove = function(targetPos, range=1, maxSaveMoves=5)
 	  if(this.memory.civPath && this.memory.civPath.length)
 	  {
 	          if(this.move(this.memory.civPath[0]) == OK)
-    	   this.memory.civPath.shift();
+    	            this.memory.civPath.shift();
 	  }
 }
 Creep.prototype.CivilianExitMove = function(targetRoomName=null)
@@ -181,12 +274,32 @@ Creep.prototype.CivilianExitMove = function(targetRoomName=null)
 	if(this.pos.x == 49 | this.pos.x == 0 | this.pos.y == 49 | this.pos.y == 0)
 	{
 	    delete this.memory.proxyExit;
+	    delete this.memory.civExitPos;
 	    this.AvoidEdges();
+	    return;
 	}
 	
-	var moveDir = this.ProxyMoveDir(targetRoomName);
-	if(moveDir)
-		this.memory.civExitPos = this.CivilianMove(this.pos.findClosestByPath(moveDir));
+	var moveDir = this.memory.proxyExit;
+	
+	if(!this.memory.civExitPos)
+	{
+	    moveDir = this.ProxyMoveDir(targetRoomName);
+	    this.memory.proxyExit = moveDir;
+	}
+	
+	
+	if(this.memory.civExitPos)
+	{
+	    var targetPos = new RoomPosition(this.memory.civExitPos.x, this.memory.civExitPos.y, this.memory.civExitPos.roomName);
+	    this.CivilianMove(targetPos);
+	}
+	else
+	{
+    	if(this.memory.proxyExit)
+    	{
+    		this.memory.civExitPos = this.pos.findClosestByPath(this.memory.proxyExit);
+    	}
+	}
 }
 Creep.prototype.RunAway = function()
 {
@@ -195,7 +308,7 @@ Creep.prototype.RunAway = function()
 		if(this.room.name == this.memory.spawnRoom)
 		{
 			this.AvoidEdges();
-			this.say("Escaped!");
+		    this.say("Escaped!");
 		}else
 		{
 			this.CivilianExitMove(this.memory.spawnRoom);

@@ -10,14 +10,36 @@ var SafeModeManager =
 				var spawns = Game.rooms[i].find(FIND_MY_SPAWNS);
 				if(spawns.length == 1)
 				{
-					if(spawns[0].hits <= spawns[0].hitsMax / 2)
+					if(spawns[0].hits < spawns[0].hitsMax)
 					{
 						Game.rooms[i].controller.activateSafeMode();
 						Game.notify("SAFEMODE AT: " + i);
+						break;
 					}
 				}
+				if(Game.time % 10 == 0)
+				{
+					if(Game.rooms[i].controller.pos.findInRange(FIND_HOSTILE_CREEPS, 1, {filter: c => (this.ClaimerCreep(c) == true)}).length)
+					{
+						Game.rooms[i].controller.activateSafeMode();
+						Game.notify("SAFEMODE AT: " + i);
+						break;
+					}
+				}
+					
 			}
 		}
+	},
+	ClaimerCreep: function(creep)
+	{
+		
+		for(var i in creep.body)
+		{
+			if(creep.body[i] == CLAIM)
+				return true;
+		}
+		
+		return false;
 	}
 }
 
