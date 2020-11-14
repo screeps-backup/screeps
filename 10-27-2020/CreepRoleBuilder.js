@@ -20,16 +20,17 @@ CreepRoleBuilder.IsWorking = function(creep)
 CreepRoleBuilder.WorkTarget = function(creep)
 {
     var target = Game.getObjectById(creep.memory.workTargetID);
-    if(target && (target instanceof ConstructionSite || (!(target instanceof ConstructionSite) && target.hits && target.hits < target.hitsMax)))
+    if(target && target.room.name == creep.room.name && ((target instanceof ConstructionSite) == true || (!(target instanceof ConstructionSite) != true && target.hits && target.hits < target.hitsMax)))
         return target;
     
+    delete creep.memory.workTargetID;
     target = creep.pos.findClosestByRange(FIND_MY_STRUCTURES, {filter: s => (s.structureType !== STRUCTURE_CONTROLLER && s.structureType !== STRUCTURE_RAMPART && s.hits && s.hits < s.hitsMax)});
     
     if(!target)
     {
         var barriers = creep.room.find(FIND_STRUCTURES, {filter: s => ((s.structureType === STRUCTURE_WALL || s.structureType === STRUCTURE_RAMPART) && s.hits)});
         barriers = _.sortBy(barriers, b => b.hits);
-        if(barriers.length && barriers[0].hits <= 100000)
+        if(barriers.length && creep.room.controller && creep.room.controller.my && barriers[0].hits <= 100000)
             target = barriers[0];
         
         if(!target)
@@ -40,11 +41,14 @@ CreepRoleBuilder.WorkTarget = function(creep)
                 target = creep.pos.findClosestByRange(FIND_STRUCTURES, {filter: s => (s.structureType !== STRUCTURE_CONTROLLER && s.structureType !== STRUCTURE_RAMPART && s.structureType !== STRUCTURE_WALL && s.hits < Math.max(s.hitsMax - creep.store.getCapacity() * 100, s.hitsMax / 2))});
         }
         
+        if(!target)
+            target = creep.pos.findClosestByRange(FIND_CONSTRUCTION_SITES, {filter: s => (s.structureType === STRUCTURE_WALL || s.structureType === STRUCTURE_RAMPART || s.structureType === STRUCTURE_TOWER)});
+        
         hostilesPresent = creep.room.find(FIND_HOSTILE_CREEPS, {filter: c => (c.body.length > 1)}).length > 0;
         if(!target && !hostilesPresent)
             target = creep.pos.findClosestByRange(FIND_MY_CONSTRUCTION_SITES);
             
-        if(!target && barriers.length)
+        if(!target && creep.room.controller && creep.room.controller.my && barriers.length)
             target = barriers[0];
             
         if(!target && hostilesPresent)
@@ -63,7 +67,7 @@ CreepRoleBuilder.Work = function(creep, target)
 {
     if(creep.pos.inRangeTo(target, 3))
     {
-        if(target instanceof ConstructionSite)
+        if((target instanceof ConstructionSite) == true)
         {
             creep.build(target);
         }else
@@ -72,15 +76,16 @@ CreepRoleBuilder.Work = function(creep, target)
         }
     }else
     {
-        creep.CivilianMove(target.pos, 3);
+        creep.CivilianMove(target.pos, 1);
     }
 }
 CreepRoleBuilder.OffTarget = function(creep)
 {
     var target = Game.getObjectById(creep.memory.offTargetID);
-    if(target && ((target.store && target.store[RESOURCE_ENERGY] >= creep.store.getFreeCapacity(RESOURCE_ENERGY)) | (target.energy && target.energy > 0)))
+    if(target && target.room.name == creep.room.name && ((target.store && target.store[RESOURCE_ENERGY] >= creep.store.getFreeCapacity(RESOURCE_ENERGY)) | (target.energy && target.energy > 0)))
         return target;
     
+    delete creep.memory.offTargetID;
     target = creep.pos.findClosestByRange(FIND_STRUCTURES, {filter: s => (((s.structureType === STRUCTURE_CONTAINER && !s.pos.findInRange(FIND_STRUCTURES, 1, {filter: a => a.structureType === STRUCTURE_CONTROLLER}).length) || s.structureType === STRUCTURE_STORAGE) && s.store[RESOURCE_ENERGY] >= creep.store.getFreeCapacity(RESOURCE_ENERGY))});
     
     if(!target && creep.room.find(FIND_MY_CREEPS, {filter: c => (c.memory.role === 'miner')}).length == 0)

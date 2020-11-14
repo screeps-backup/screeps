@@ -43,16 +43,20 @@ CreepRoleMapper.run = function(creep)
 				switch(exit)
 				{
 				    case 1:
-				        creep.memory.exitPos = creep.pos.findClosestByPath(FIND_EXIT_TOP, {filter: p => (!p.findInRange(FIND_STRUCTURES, 0).length)});
+				        if(!Memory.avoidRoomNames || (Memory.avoidRoomNames && !Memory.avoidRoomNames.includes(Game.map.describeExits(creep.room.name)[TOP])))
+				            creep.memory.exitPos = creep.pos.findClosestByPath(FIND_EXIT_TOP, {filter: p => (!p.findInRange(FIND_STRUCTURES, 0).length)});
 				        break;
 				    case 3:
-				        creep.memory.exitPos = creep.pos.findClosestByPath(FIND_EXIT_RIGHT, {filter: p => (!p.findInRange(FIND_STRUCTURES, 0).length)});
+				        if(!Memory.avoidRoomNames || (Memory.avoidRoomNames && !Memory.avoidRoomNames.includes(Game.map.describeExits(creep.room.name)[RIGHT])))
+				            creep.memory.exitPos = creep.pos.findClosestByPath(FIND_EXIT_RIGHT, {filter: p => (!p.findInRange(FIND_STRUCTURES, 0).length)});
 				        break;
 				    case 5:
-				        creep.memory.exitPos = creep.pos.findClosestByPath(FIND_EXIT_BOTTOM, {filter: p => (!p.findInRange(FIND_STRUCTURES, 0).length)});
+				        if(!Memory.avoidRoomNames || (Memory.avoidRoomNames && !Memory.avoidRoomNames.includes(Game.map.describeExits(creep.room.name)[BOTTOM])))
+				            creep.memory.exitPos = creep.pos.findClosestByPath(FIND_EXIT_BOTTOM, {filter: p => (!p.findInRange(FIND_STRUCTURES, 0).length)});
 				        break;
 				    case 7:
-				        creep.memory.exitPos = creep.pos.findClosestByPath(FIND_EXIT_LEFT, {filter: p => (!p.findInRange(FIND_STRUCTURES, 0).length)});
+				        if(!Memory.avoidRoomNames || (Memory.avoidRoomNames && !Memory.avoidRoomNames.includes(Game.map.describeExits(creep.room.name)[LEFT])))
+				            creep.memory.exitPos = creep.pos.findClosestByPath(FIND_EXIT_LEFT, {filter: p => (!p.findInRange(FIND_STRUCTURES, 0).length)});
 				        break;
 				    default:
 				        console.log('no mapper exit');

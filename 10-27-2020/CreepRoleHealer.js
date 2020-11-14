@@ -5,6 +5,17 @@ var creepRoleMilitary = require("CreepRoleMilitary");
 
 var CreepRoleHealer = Object.create(creepRoleMilitary);
 
+CreepRoleHealer.run = function(creep)
+{
+    if(!creep.memory.workTargetID || (creep.memory.workTargetID && (!Game.getObjectById(creep.memory.workTargetID) || (Game.getObjectById(creep.memory.workTargetID) && Game.getObjectById(creep.memory.workTargetID).room.name == creep.room.name))))
+    {
+        if(creep.pos.x == 0 | creep.pos.x == 49 | creep.pos.y == 0 | creep.pos.y == 49)
+        {
+            creep.AvoidEdges();
+        }
+    }
+    creepRoleMilitary.run.call(this, creep);
+}
 CreepRoleHealer.WorkTarget = function(creep)
 {
 	if(creep.hits < creep.hitsMax)

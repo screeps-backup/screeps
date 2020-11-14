@@ -18,7 +18,11 @@ var OutpostManager =
     {
       if (flag.toLowerCase().startsWith('outpost'))
       {
-        Memory.outpostNames[flag.replace('-', '').slice(7, flag.toString().replace('-', '').length)].push(Game.flags[flag].pos.roomName);
+          var roomName = flag.slice(7, flag.length);
+          while(roomName.indexOf('-') > 0)
+            roomName = roomName.replace('-', '');
+          if(Memory.outpostNames[roomName])
+            Memory.outpostNames[roomName].push(Game.flags[flag].pos.roomName);
       }
     }
   }

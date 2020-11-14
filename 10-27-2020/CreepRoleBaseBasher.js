@@ -14,8 +14,17 @@ CreepRoleBaseBasher.run = function(creep)
     if(creep.memory.proxyTarget && creep.room.name !== creep.memory.proxyTarget)
     {
 		//Wait for healer if you are in transit
-		if(creep.memory.garrisonTarget && creep.AllignWithHealer() == false)
-			creep.CivilianExitMove(creep.memory.proxyTarget);
+		if(creep.memory.garrisonTarget)
+		{
+			if(Game.flags['MilitaryMove'])
+			{
+		        creep.MilitaryExitMove(Game.flags['MilitaryMove'].pos);
+			}else
+			{
+				console.log('BaseBasher needs MilitaryMove flag dumbass!');
+				Game.notify('BaseBasher needs MilitaryMove flag dumbass!');
+			}
+		}
 		creep.MeleeDefence();
     }else
     {   
@@ -35,7 +44,13 @@ CreepRoleBaseBasher.run = function(creep)
 }
 CreepRoleBaseBasher.WorkTarget = function(creep)
 {
-    var target = creep.pos.findClosestByRange(FIND_HOSTILE_STRUCTURES, {filter: s => (s.structureType != STRUCTURE_RAMPART && s.structureType != STRUCTURE_CONTROLLER)});
+    var target = creep.pos.findClosestByPath(FIND_HOSTILE_STRUCTURES, {filter: s => s.structureType === STRUCTURE_TOWER});
+    
+    if(!target)
+        target = creep.pos.findClosestByPath(FIND_HOSTILE_CONSTRUCTION_SITES, {filter: s => (s.structureType === STRUCTURE_TOWER && s.progress >= 1000)});
+    
+    if(!target)
+        target = creep.pos.findClosestByRange(FIND_HOSTILE_STRUCTURES, {filter: s => (s.structureType != STRUCTURE_RAMPART && s.structureType != STRUCTURE_CONTROLLER)});
     if(!target)
         target = creep.pos.findClosestByRange(FIND_HOSTILE_CREEPS);
     if(creep.room.name == creep.memory.proxyTarget)
@@ -58,9 +73,10 @@ CreepRoleBaseBasher.Work = function(creep, target)
 	
 	if(!target.pos.inRangeTo(creep.pos, 1))
 	{
-	    var targets = creep.pos.findInRange(FIND_STRUCTURES, 1);
+	    var targets = creep.pos.findInRange(FIND_STRUCTURES, 1, {filter: s => (s.hits && s.structureType !== STRUCTURE_ROAD && s.structureType !== STRUCTURE_CONTAINER)});
 	    targets = _.sortBy(targets, t => (t.hits));
-	    creep.Demolish(targets[0]);
+	    if(targets.length)
+	        creep.Demolish(targets[0]);
 	}
 	
 	if(target)
@@ -68,7 +84,7 @@ CreepRoleBaseBasher.Work = function(creep, target)
 	    if(target instanceof Structure)
             creep.Demolish(target);
         else
-            creep.MilitaryMove(target.pos, 1);
+            creep.MilitaryMove(target.pos, 0, true);
 	}
 }
 

@@ -61,6 +61,35 @@ var AlertManager =
 		{
 		    this.AlertDeaths(Game.rooms[i]);
 		}
+		
+		if(Game.time % 100 == 0)
+		{
+		    for(var i in Game.rooms)
+		    {
+		        if(Game.rooms[i].controller && Game.rooms[i].controller.my)
+		        {
+		            if(Game.rooms[i].find(FIND_NUKES).length > 0)
+		            {
+		                Game.notify("HOLY CRAP!!! A NUKE AT " + Game.rooms[i].name + "! AHHHHHHHHHH!!!!!!");
+		            }
+		        }
+		    }
+		}
+		
+		if(!Memory.currentCredits || (Memory.currentCredits && Memory.currentCredits != Game.market.credits))
+		{
+			if(Memory.currentCredits)
+			{
+				var delta = Game.market.credits - Memory.currentCredits;
+				Game.notify(delta.toString() + " credits change from an intial balance of " + Memory.currentCredits.toString());
+				Memory.currentCredits = Game.market.credits;
+			}else
+			{
+				Memory.currentCredits = Game.market.credits;
+				Game.notify("Inital credits: " + Game.market.credits.toString());
+			}
+		}
+		
 		/*
 		if(Game.time % 100 == 0)
 		    Game.notify(new Date(Date.now()), 60);
@@ -236,14 +265,17 @@ var AlertManager =
 	    var theirDeaths = room.find(FIND_TOMBSTONES, {filter: t => (!t.creep.name.includes("Scout") && t.creep.my == false && t.creep.ticksToLive !== 1 && t.deathTime == Game.time - 1)});
 	    for(var i in theirDeaths)
 	    {
-	        if([i].pos.findInRange(FIND_MY_CREEPS, 1).length > 0)
+	        if(theirDeaths[i].creep.owner.username != 'Source Keeper')
 	        {
-    	        Game.notify("You killed " + theirDeaths[i].creep.owner.username + "'s " + theirDeaths[i].creep.name + " at " + room.name, 5);
-    	        console.log("You killed " + theirDeaths[i].creep.owner.username + "'s " + theirDeaths[i].creep.name + " at " + room.name);
-	        }else
-	        {
-	            Game.notify(theirDeaths[i].creep.owner.username + "'s " + theirDeaths[i].creep.name + " died at " + room.name, 5);
-    	        console.log(theirDeaths[i].creep.owner.username + "'s " + theirDeaths[i].creep.name + " died at " + room.name);
+    	        if(theirDeaths[i].pos.findInRange(FIND_MY_CREEPS, 1).length > 0)
+    	        {
+        	        Game.notify("You killed " + theirDeaths[i].creep.owner.username + "'s " + theirDeaths[i].creep.name + " at " + room.name, 5);
+        	        console.log("You killed " + theirDeaths[i].creep.owner.username + "'s " + theirDeaths[i].creep.name + " at " + room.name);
+    	        }else
+    	        {
+    	            Game.notify(theirDeaths[i].creep.owner.username + "'s " + theirDeaths[i].creep.name + " died at " + room.name, 5);
+        	        console.log(theirDeaths[i].creep.owner.username + "'s " + theirDeaths[i].creep.name + " died at " + room.name);
+    	        }
 	        }
 	    }
 	    

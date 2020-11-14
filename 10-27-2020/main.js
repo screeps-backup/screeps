@@ -26,6 +26,8 @@ var demolisherManager = require("DemolisherManager");
 var alertManager = require("AlertManager");
 var linkManager = require("LinkManager");
 var pixelManager = require("PixelManager");
+var avoidRoomsManager = require("AvoidRoomsManager");
+var claimManager = require("ClaimManager");
 
 var creepRole = require("CreepRole");
 
@@ -50,7 +52,9 @@ var creepRoleOneMiner = require("CreepRoleOneMiner");
 var creepRoleProxyMiner = require("CreepRoleProxyMiner");
 var creepRoleProxyCarrier = require("CreepRoleProxyCarrier");
 var creepRoleProxyBuilder = require("CreepRoleProxyBuilder");
+var creepRoleBaseBuilder = require("CreepRoleBaseBuilder");
 var creepRoleReserver = require("CreepRoleReserver");
+var creepRoleClaimer = require("CreepRoleClaimer");
 
 var myUsername = null;
 for(var i in Game.rooms)
@@ -118,8 +122,14 @@ var RunCreep = function(creep)
         case 'proxyBuilder':
             creepRoleProxyBuilder.run(creep);
             break;
+		case 'baseBuilder':
+			creepRoleBaseBuilder.run(creep);
+			break;
         case 'reserver':
             creepRoleReserver.run(creep);
+            break;
+		case 'claimer':
+            creepRoleClaimer.run(creep);
             break;
             
         default:
@@ -134,6 +144,7 @@ var rubbleCountdown = 1000;
 //Max overall average CPU for a room (One below LV4): 6.84
 module.exports.loop = function ()
 {
+    
 	cpuCounter.run();
 	
     memoryManager.run();
@@ -165,6 +176,8 @@ module.exports.loop = function ()
     alertManager.run();
 	linkManager.run();
 	pixelManager.run();
+	avoidRoomsManager.run();
+	claimManager.run();
 	
     for(var name in Game.creeps)
         RunCreep(Game.creeps[name]);

@@ -8,12 +8,16 @@ CreepRoleProxyCarrier.run = function(creep)
     if(creep.memory.proxyTarget && (!Game.rooms[creep.memory.proxyTarget] || (Game.rooms[creep.memory.proxyTarget] && Game.rooms[creep.memory.proxyTarget].find(FIND_HOSTILE_CREEPS, {filter: c => (c.body.length > 1)}).length > 0)))
     {
         delete creep.memory.proxyTarget;
+        
         creep.ResetMemory();
     }
     if(creep.RunAway() == true)
+    {
         return;
+    }
     
-    var working = creep.memory.isWorking;
+    
+    var working = creep.memory.isWorking === true;
     var isWorking = this.IsWorking(creep);
     if(working != isWorking)
     {
@@ -27,6 +31,15 @@ CreepRoleProxyCarrier.run = function(creep)
     {
         creepRoleCarrier.run.call(this, creep);
     }
+}
+CreepRoleProxyCarrier.OffWork = function(creep, target)
+{
+    if(target && creep.room.name != target.room.name)
+    {
+        creep.memory.proxyTarget = target.room.name;
+        return;
+    }
+    creepRoleCarrier.OffWork.call(this, creep, target);
 }
 CreepRoleProxyCarrier.OffTarget = function(creep)
 {
@@ -154,6 +167,12 @@ CreepRoleProxyCarrier.OffTarget = function(creep)
 }
 CreepRoleProxyCarrier.Work = function(creep, target)
 {
+    if(creep.room.name != target.room.name)
+    {
+        creep.memory.proxyTarget = target.room.name;
+        return;
+    }
+    
     if(creep.pos.inRangeTo(target, 1))
     {
         creep.transfer(target, RESOURCE_ENERGY);

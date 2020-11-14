@@ -15,6 +15,15 @@ var SafeModeManager =
 						Game.rooms[i].controller.activateSafeMode();
 						Game.notify("SAFEMODE AT: " + i);
 						break;
+					}else
+					{
+					    var rampart = spawns[0].pos.findInRange(FIND_MY_STRUCTURES, 0, {filter: s => (s.structureType === STRUCTURE_RAMPART)})[0] || null;
+					    if(rampart && rampart.hits <= 10000 && spawn.pos.findInRange(FIND_HOSTILE_CREEPS, 1).length > 1)
+					    {
+					        Game.rooms[i].controller.activateSafeMode();
+    						Game.notify("SAFEMODE AT: " + i);
+    						break;
+					    }
 					}
 				}
 				if(Game.time % 10 == 0)

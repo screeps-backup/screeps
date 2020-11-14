@@ -2,6 +2,11 @@
 var creepRoleMilitary = require("CreepRoleMilitary");
 
 var CreepRoleDefender = Object.create(creepRoleMilitary);
+CreepRoleDefender.run = function(creep)
+{
+    creep.MeleeDefence();
+    creepRoleMilitary.run.call(this, creep);
+}
 CreepRoleDefender.WorkTarget = function(creep)
 {
     if(creep.memory.defend === true)
@@ -13,7 +18,6 @@ CreepRoleDefender.WorkTarget = function(creep)
         {
             creep.memory.defend = true;
         }
-        creep.MeleeDefence();
     }
     
     return null;

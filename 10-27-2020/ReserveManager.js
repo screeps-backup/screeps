@@ -8,7 +8,7 @@ var ReserveManager =
 {
     run: function()
     {
-        if (Game.time % 1 == 0)
+        if (Game.time % 10 == 0)
         {
             for(var r in Game.rooms)
             {
@@ -18,7 +18,6 @@ var ReserveManager =
                     {
 						var reserverBody = SpawnManager.SelectBody(Game.rooms[r].energyCapacityAvailable, [new CreepBody({numClaim: 2, numMove: 4}), new CreepBody({numClaim: 2, numMove: 2})]);
 						
-						//Calculate the number of claim pieces
 						var claimNum = 0;
 						for(var i in reserverBody)
 						{
@@ -29,7 +28,7 @@ var ReserveManager =
 						//Multiply claimNum - 1 by 600 if claimNum > 1
 						if(claimNum > 1)
 						{
-							if(Game.rooms[Memory.outpostNames[r][o]] && Game.rooms[Memory.outpostNames[r][o]].controller && ((Game.rooms[Memory.outpostNames[r][o]].controller.owner && !Game.rooms[Memory.outpostNames[r][o]].controller.my) | (Game.rooms[Memory.outpostNames[r][o]].controller.reservation && Game.rooms[Memory.outpostNames[r][o]].controller.reservation.ticksToEnd < 5000 - ((claimNum - 1) * 600))) && Game.rooms[Memory.outpostNames[r][o]].find(FIND_HOSTILE_CREEPS, {filter: c => (c.body.length > 1)}).length == 0)
+							if(Game.rooms[Memory.outpostNames[r][o]] && Game.rooms[Memory.outpostNames[r][o]].controller && ((Game.rooms[Memory.outpostNames[r][o]].controller.owner && !Game.rooms[Memory.outpostNames[r][o]].controller.my) || (!Game.rooms[Memory.outpostNames[r][o]].controller.owner && (!Game.rooms[Memory.outpostNames[r][o]].controller.reservation || (Game.rooms[Memory.outpostNames[r][o]].controller.reservation && Game.rooms[Memory.outpostNames[r][o]].controller.reservation.ticksToEnd < 5000 - ((claimNum - 1) * 600))))) && Game.rooms[Memory.outpostNames[r][o]].find(FIND_HOSTILE_CREEPS, {filter: c => (c.body.length > 1)}).length == 0)
 							{
 								var normalSpawn = Game.rooms[r].find(FIND_MY_SPAWNS, {filter: s => (s.name.startsWith("Spawn"))})[0];
 								if(normalSpawn && SpawnManager.GlobalCreepsByRole('reserver').filter(c => (c.memory.spawnRoom == r && c.memory.proxyTarget == Memory.outpostNames[r][o])).length < 1)

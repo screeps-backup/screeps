@@ -8,19 +8,16 @@ var CreepRoleProxyDefender = Object.create(creepRoleDefender);
 CreepRoleProxyDefender.run = function(creep)
 {
 	creep.RangedDefence();
+	creep.MeleeDefence();
 	if(creep.memory.garrisoned === false)
 		creep.Garrison(creep.memory.numGarrison, creep.memory.garrisonTarget);
 	
 	if(creep.memory.proxyTarget && creep.room.name !== creep.memory.proxyTarget)
 	{
-	    creep.MeleeDefence();
 		creep.CivilianExitMove(creep.memory.proxyTarget);
     }else if(creep.memory.garrisoned !== false) 
     {
         creepRoleDefender.run.call(this, creep);
-    }else
-    {
-        creep.MeleeDefence();
     }
 }
 CreepRoleProxyDefender.WorkTarget = function(creep)

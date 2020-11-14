@@ -1,6 +1,24 @@
 var creepRole = require('CreepRole');
 
 var CreepRoleMiner = Object.create(creepRole);
+CreepRoleMiner.run = function(creep)
+{
+    
+    var isWorking = this.IsWorking(creep);
+    
+    if(isWorking === true)
+    {
+        var workTarget = this.WorkTarget(creep);
+        if(workTarget)
+            this.Work(creep, workTarget);
+    }else
+    {
+        //Off work is usually the refuel function
+        var offTarget = this.OffTarget(creep);
+        if(offTarget)
+            this.OffWork(creep, offTarget);
+    }
+}
 CreepRoleMiner.IsWorking = function(creep)
 {
     if(creep.memory.isWorking === true)
@@ -27,6 +45,7 @@ CreepRoleMiner.WorkTarget = function(creep)
     var sources = creep.room.find(FIND_SOURCES, {filter: s => (!creep.OtherCreepsOnWorkTarget(s.id))});
     if(sources.length)
     {
+        creep.say('test');
         var closestSource = creep.pos.findClosestByRange(sources);
         creep.memory.workTargetID = closestSource.id;
         return closestSource;

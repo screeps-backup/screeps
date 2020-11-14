@@ -216,7 +216,7 @@ var SpawnManager =
             normalSpawn = Game.rooms[roomName].find(FIND_MY_SPAWNS)[0];
         if(normalSpawn && !this.GlobalCreeps().filter(c => (c.memory.role == 'scout' && c.memory.proxyTarget == proxyTargetName && (c.memory.isWorking !== false || (c.memory.isWorking === false && c.room.name == c.memory.proxyTarget)))).length)
         {
-            this.SpawnCreep(normalSpawn, 'scout', [MOVE], {proxyTarget: proxyTargetName});
+			this.SpawnCreep(normalSpawn, 'scout', [MOVE], {proxyTarget: proxyTargetName});
         }
     },
     SafeToSpawnAll: function(room)

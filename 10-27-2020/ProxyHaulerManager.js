@@ -14,17 +14,20 @@ var ProxyHaulerManager =
         if(Game.time % 100 == 0)
             this.CalculateAllNumHaulers();
         
-        if (Game.time % 10 == 0 && baseBasherManager.SpawnDone(r) == true && SpawnManager.normalSpawnDone[r] == true && defenderManager.SpawnDone(r) == true && proxyDefenderManager.SpawnRoomDone(r) == true)
+        if (Game.time % 10 == 0)
         {
             for(var r in Game.rooms)
             {
                 if(Game.rooms[r].controller && Game.rooms[r].controller.my && Game.rooms[r].controller.level >= 4 && Game.rooms[r].storage && this.numHaulers[r] && this.numHaulers[r] > 0)
                 {
-                    var normalSpawn = Game.rooms[r].find(FIND_MY_SPAWNS, {filter: s => (s.name.startsWith("Spawn") && !s.spawnCooldownTimes)})[0];
-                    if(normalSpawn && SpawnManager.GlobalCreepsByRole('proxyCarrier').filter(c => (c.memory.spawnRoom == r && !SpawnManager.DueToDie(c))).length < this.numHaulers[r])
+                    if(baseBasherManager.SpawnDone(r) == true && SpawnManager.normalSpawnDone[r] == true && defenderManager.SpawnDone(r) == true && proxyDefenderManager.SpawnRoomDone(r) == true)
                     {
-                        var proxyHaulerBody = SpawnManager.SelectBody(normalSpawn.room.energyCapacityAvailable, proxyCarrierBodies);
-                        SpawnManager.SpawnCreep(normalSpawn, 'proxyCarrier', proxyHaulerBody);
+                        var normalSpawn = Game.rooms[r].find(FIND_MY_SPAWNS, {filter: s => (s.name.startsWith("Spawn") && !s.spawnCooldownTimes)})[0];
+                        if(normalSpawn && SpawnManager.GlobalCreepsByRole('proxyCarrier').filter(c => (c.memory.spawnRoom == r && !SpawnManager.DueToDie(c))).length < this.numHaulers[r])
+                        {
+                            var proxyHaulerBody = SpawnManager.SelectBody(normalSpawn.room.energyCapacityAvailable, proxyCarrierBodies);
+                            SpawnManager.SpawnCreep(normalSpawn, 'proxyCarrier', proxyHaulerBody);
+                        }
                     }
                 }
             }

@@ -40,90 +40,99 @@ Creep.prototype.AllignWithHealer = function()
 		return false;
 	
 	var assignedHealers = SpawnManager.GlobalCreeps().filter(c => (c.memory.role == 'healer' && c.memory.workTargetID == this.id));
-	if(assignedHealers.length && assignedHealers[0].room == this.room && !this.pos.inRangeTo(assignedHealers[0].pos, 1))
+	if(assignedHealers.length && this.room.name != this.memory.spawnRoom && assignedHealers[0].room == this.room && !this.pos.inRangeTo(assignedHealers[0].pos, 1))
 		return true;
 	if(!assignedHealers.length && this.room.name == this.memory.spawnRoom)
 	    return true;
 	
 	return false;
 }
-//Very CPU intensive ATM. Use with caution.
-//It will refuse to recalculate if and only if it's demolishing a structure
-//May have civlian applications which is why it's a general prototype
-Creep.prototype.MilitaryMove = function(targetPos, range=1)
+Creep.prototype.MilitaryPathfind = function(targetPos, range, limitRoom=false)
 {
-	if(!targetPos)
-		return;
-	
-	
-	if(this.memory.inPathID && !Game.getObjectById(this.memory.inPathID))
-		delete this.memory.inPathID;
-	//Don't move if you're at the target or there's a structure blocking your path
-	if((!targetPos || (targetPos && this.pos.inRangeTo(targetPos, range))) | (this.memory.inPathID && Game.getObjectById(this.memory.inPathID)))		
-		return;
-	
-	var numWork = 0;
-	//Don't destroy your own structures
-	if(!(this.room.controller && this.room.controller.my))
+    var numWork = 0;
+	for(var i = 0; i < this.body.length; i++)
 	{
-		for(var i = 0; i < this.body.length; i++)
-		{
-			if(this.body[i].type == WORK)
-				numWork++;
-		}
+		if(this.body[i].type == WORK)
+			numWork++;
 	}
 	var numDamage = numWork * 50;
 	
+	var self = this;
 	let ret = PathFinder.search(
-		this.pos, {pos: targetPos, range: range},
+		this.pos, targetPos,
 		{
 		  // We need to set the defaults costs higher so that we
 		  // can set the road cost lower in `roomCallback`
 		  plainCost: 2,
 		  swampCost: 10,
+		  maxOps: 100000,
+		  maxRooms: 64,
 	
 		  roomCallback: function(roomName) {
+		      
+		    if(Memory.avoidRoomNames && Memory.avoidRoomNames.includes(roomName))
+			{
+			    return false;
+			}
 	
 			let room = Game.rooms[roomName];
 			let costs = new PathFinder.CostMatrix;
 			
-			for(var x = 0; x < 49; x++)
+		    const terrain = new Room.Terrain(roomName);
+		    const visual = new RoomVisual(roomName);
+		    for(let y = 0; y < 50; y++) 
+		    {
+                for(let x = 0; x < 50; x++) 
+                {
+                    const tile = terrain.get(x, y);
+                    
+                    const weight =
+                        tile === TERRAIN_MASK_WALL  ? 1000000 : // wall  => unwalkable
+                        tile === TERRAIN_MASK_SWAMP ?   5 : // swamp => weight:  5
+                                                        1 ; // plain => weight:  1
+                    costs.set(x, y, weight);
+                    //visual.text(weight, x, y);
+                }
+            }
+		    if(room)
 			{
-				costs.set(x, 0, 254);
-				costs.set(x, 49, 254);
-			}
-			for(var y = 0; y < 49; y++)
-			{
-				costs.set(0, y, 254);
-				costs.set(49, y, 254);
-			}
-			
-			if(room)
-			{
-				room.find(FIND_STRUCTURES).forEach(function(struct) {
-				  if (struct.structureType === STRUCTURE_ROAD) {
-					// Favor roads over plain tiles
-					costs.set(struct.pos.x, struct.pos.y, 1);
-				  } else if (struct.structureType !== STRUCTURE_CONTAINER &&
-							 (struct.structureType !== STRUCTURE_RAMPART ||
-							  !struct.my)) {
-					// Can't walk through non-walkable buildings
-					if(numDamage > 0)
-						costs.set(struct.pos.x, struct.pos.y, Math.ceil(struct.hits / numDamage));
-					else
-						costs.set(struct.pos.x, struct.pos.y, 0xff);
-				  }
-				});
-				room.find(FIND_MY_CONSTRUCTION_SITES).forEach(function(struct){
-					if(struct.structureType !== STRUCTURE_RAMPART && struct.structureType !== STRUCTURE_ROAD && struct.structureType !== STRUCTURE_CONTAINER)
-						costs.set(struct.pos.x, struct.pos.y, 0xff);
-				});
-				room.find(FIND_HOSTILE_CREEPS).forEach(function(c){
-					costs.set(c.pos.x, c.pos.y, 0xff);
-				});
-				room.find(FIND_MY_CREEPS).forEach(function(c){
-					costs.set(c.pos.x, c.pos.y, 16);
-				});
+			    if(room.name == self.room.name || (room.name != self.room.name && limitRoom == false))
+			    {
+    				room.find(FIND_STRUCTURES).forEach(function(struct) {
+    				  if (struct.structureType === STRUCTURE_ROAD) {
+    					// Favor roads over plain tiles
+    					costs.set(struct.pos.x, struct.pos.y, 1);
+    				  } else if (struct.structureType !== STRUCTURE_CONTAINER &&
+    							 (struct.structureType !== STRUCTURE_RAMPART ||
+    							  !struct.my)) {
+    					// Can't walk through non-walkable buildings
+    					if(numDamage > 0)
+						{
+						    var visual = new RoomVisual(room.name);
+						    if(struct.hits)
+						    {
+        						costs.set(struct.pos.x, struct.pos.y, Math.ceil(struct.hits / numDamage));
+    							visual.text(Math.ceil(struct.hits / numDamage).toString(), struct.pos.x, struct.pos.y);
+						    }else
+						    {
+						        costs.set(struct.pos.x, struct.pos.y, 0xff);
+						        visual.text('0xff', struct.pos.x, struct.pos.y);
+						    }
+    					}else
+    						costs.set(struct.pos.x, struct.pos.y, 0xff);
+    				  }
+    				});
+    				room.find(FIND_MY_CONSTRUCTION_SITES).forEach(function(struct){
+    					if(struct.structureType !== STRUCTURE_RAMPART && struct.structureType !== STRUCTURE_ROAD && struct.structureType !== STRUCTURE_CONTAINER)
+    						costs.set(struct.pos.x, struct.pos.y, 0xff);
+    				});
+    				room.find(FIND_HOSTILE_CREEPS).forEach(function(c){
+    					costs.set(c.pos.x, c.pos.y, 0xff);
+    				});
+    				room.find(FIND_MY_CREEPS).forEach(function(c){
+    					costs.set(c.pos.x, c.pos.y, 16);
+    				});
+			    }
 			}
 	
 			return costs;
@@ -136,12 +145,124 @@ Creep.prototype.MilitaryMove = function(targetPos, range=1)
 		  if(numWork > 0)
 		  {
 			var blockingPath = ret.path[0].findInRange(FIND_STRUCTURES, 0, {filter: s => (s.structureType !== STRUCTURE_CONTAINER && (s.structureType !== STRUCTURE_RAMPART || !s.my))}); 
-			if(blockingPath.length)
+			if(blockingPath.length && (!this.memory.inPathID || (this.memory.inPathID && !Game.getObjectById(this.memory.inPathID))))
 				this.memory.inPathID = blockingPath[0].id
 		  }
-
+	  }
+	  
+	  return ret;
+}
+//Very CPU intensive ATM. Use with caution.
+//It will refuse to recalculate if and only if it's demolishing a structure
+//May have civlian applications which is why it's a general prototype
+Creep.prototype.MilitaryMove = function(targetPos, range=1)
+{
+	if(!targetPos)
+		return;
+	
+	if(this.memory.proxyTarget && this.room.name != this.memory.proxyTarget && this.room.find(FIND_HOSTILE_CREEPS, {filter: c => (c.owner.username == 'Source Keepr')}).length > 0)
+	    this.CivilianMove(targetPos);
+	
+	if(this.memory.inPathID && !Game.getObjectById(this.memory.inPathID))
+		delete this.memory.inPathID;
+	//Don't move if you're at the target or there's a structure blocking your path
+	if((!targetPos || (targetPos && this.pos.inRangeTo(targetPos, range))) | (this.memory.inPathID && Game.getObjectById(this.memory.inPathID) && Game.getObjectById(this.memory.inPathID).pos.inRangeTo(this.pos, 1)))		
+		return;
+	
+	  var ret = this.MilitaryPathfind(targetPos, range, true);
+	  
+	  
+    if(ret.path.length)
+    {
 		this.move(this.pos.getDirectionTo(ret.path[0]));
 	  }
+}
+Creep.prototype.MilitaryMapPathRoomNames = function(endPos)
+{
+    if(!Game.rooms[endPos.roomName] && (this.memory.militaryExitRooms === undefined | this.memory.militaryExitRooms === null))
+        return null;
+    
+    
+    var toReturn = [];
+    
+    if(Game.rooms[endRoomName] && (this.memory.militaryExitRooms === undefined | this.memory.militaryExitRooms === null))
+    {
+        var ret = this.MilitaryPathfind(endPos, 1);
+        for(var i in ret.path)
+        {
+            if((!toReturn.length || (toReturn.length && ret.path[i].roomName != toReturn[toReturn.length - 1]) && ret.path[i].roomName != this.room.name && ret.path[i].roomName != endRoomName))
+                toReturn.push(ret.path[i].roomName);
+        }
+		for(var i = 1; i < ret.path.length; i++)
+		{
+			if(ret.path[i].roomName == endPos.roomName && ret.path[i - 1] != endPos.roomName)
+				this.memory.finalMilitaryPos = ret.path[i];
+		}
+		this.memory.militaryExitRooms = toReturn;
+        return toReturn;
+    }
+    
+    return this.memory.militaryExitRooms;
+    
+    
+}
+Creep.prototype.MilitaryExitMove = function(targetPos)
+{
+    if(!targetPos)
+        return;
+	
+	if(this.pos.x == 49 | this.pos.x == 0 | this.pos.y == 49 | this.pos.y == 0)
+	{
+	    delete this.memory.proxyExit;
+	    delete this.memory.militaryExitPos;
+	    this.AvoidEdges();
+	    return;
+	}
+	
+	var moveDir = this.memory.proxyExit;
+	
+	if(this.memory.proxyExit == undefined | this.memory.militaryExitPos == undefined)
+	{
+		if(!this.memory.finalMilitaryPos || (this.memory.finalMilitaryPos && this.room.name != this.memory.finalMilitaryPos.roomName))
+		{
+			if(!this.memory.militaryMoveRooms || (this.memory.militaryMoveRooms && !this.memory.militaryMoveRooms.length))
+			{
+				if(!this.memory.proxyExit || (this.memory.proxyExit && Game.map.describeExits(this.room.name)[this.memory.proxyExit] != targetPos.roomName))
+				{
+					this.memory.militaryExitRooms = this.MilitaryMapPathRoomNames(targetPos);
+				}
+			}
+		}
+        if(this.memory.militaryExitRooms && this.memory.militaryExitRooms.length && this.AllignWithHealer() == false)
+        {
+            var exitTargetRoomName = this.memory.militaryExitRooms.shift();
+	        this.memory.proxyExit = this.room.findExitTo(exitTargetRoomName);
+        }
+	}
+	
+	
+	if(this.memory.militaryExitPos && (!this.memory.finalMilitaryPos || (this.memory.finalMilitaryPos && this.room.name != this.memory.finalMilitaryPos.roomName)))
+	{
+	    var targetPos = new RoomPosition(this.memory.militaryExitPos.x, this.memory.militaryExitPos.y, this.memory.militaryExitPos.roomName);
+	    this.CivilianMove(targetPos);
+	}
+	else
+	{
+    	if(this.memory.proxyExit && this.room.find(this.memory.proxyExit).length > 0)
+    	{
+    		this.memory.militaryExitPos = this.pos.findClosestByRange(this.memory.proxyExit);
+    	}else
+    	{
+    	    if(this.memory.finalMilitaryPos && this.room.name == this.memory.finalMilitaryPos.roomName)
+    	    {
+				if(!this.memory.proxyExit || (this.memory.proxyExit && Game.map.describeExits(this.room.name)[this.memory.proxyExit] != endProxyTarget))
+				{
+					this.memory.proxyExit = this.room.findExitTo(targetPos.roomName);
+				}
+    	        this.CivilianMove(new RoomPosition(this.memory.finalMilitaryPos.x, this.memory.finalMilitaryPos.y, this.memory.finalMilitaryPos.roomName), 1);
+    	    }
+    	}
+	}
 }
 Creep.prototype.Garrison = function(targetAllies, endProxyTarget)
 {
@@ -163,9 +284,15 @@ Creep.prototype.Garrison = function(targetAllies, endProxyTarget)
 		return false;
 	}
 	
+	if(SpawnManager.GlobalCreeps().filter(c => (c.memory.role == 'healer' && c.memory.workTargetID == this.id && c.room.name != this.room.name)).length > 0)
+	{
+		this.AvoidEdges();
+		return false;
+	}
+	
 	if(this.room.name != endProxyTarget && this.memory.proxyExit && Game.map.describeExits(this.room.name)[this.memory.proxyExit] == endProxyTarget)
 	{
-	    if(this.room.find(FIND_MY_CREEPS, {filter: c => (c.memory.role == this.memory.role && c.fatigue == 0 && c.hits == c.hitsMax && (!c.memory.proxyExit || (c.memory.proxyExit && c.pos.findClosestByRange(c.memory.exitPos) && c.pos.findClosestByRange(c.memory.proxyExit).inRangeTo(c.pos, 2))))}).length >= targetAllies)
+	    if(this.room.find(FIND_MY_CREEPS, {filter: c => (c.memory.role == this.memory.role && c.fatigue == 0 && (c.memory.civExitPos && (new RoomPosition(c.memory.civExitPos.x, c.memory.civExitPos.y, c.memory.civExitPos.roomName)).inRangeTo(c.pos, 2)))}).length >= targetAllies)
 	    {
 			var creeps = this.room.find(FIND_MY_CREEPS, {filter: c => (c.memory.role == this.memory.role)});
 	        for(var c in creeps)

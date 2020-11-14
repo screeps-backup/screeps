@@ -16,7 +16,7 @@ CreepRoleScout.IsWorking = function(creep)
     if(creep.memory.isWorking === false)
         return false;
     
-    var isWorking = !(creep.room.name === creep.memory.proxyTarget && (creep.pos.x > 2 && creep.pos.y > 2 && creep.pos.x < 47 && creep.pos.y < 47));
+    var isWorking = !(creep.room.name === creep.memory.proxyTarget && (creep.pos.x > 3 && creep.pos.y > 3 && creep.pos.x < 46 && creep.pos.y < 46));
 	if(isWorking == false)
 		creep.memory.isWorking = false;
 	else if(creep.room.name == creep.memory.proxyTarget)

@@ -6,7 +6,7 @@ CreepRoleProxyBuilder.run = function(creep)
     if(creep.RunAway() == true)
         return;
     
-    var working = creep.memory.isWorking;
+    var working = creep.memory.isWorking === true;
     var isWorking = this.IsWorking(creep);
     if(working != isWorking)
         creep.ResetMemory();
@@ -28,6 +28,19 @@ CreepRoleProxyBuilder.WorkTarget = function(creep)
     {
         target = creep.pos.findClosestByRange(FIND_MY_STRUCTURES, {filter: s => (s.structureType !== STRUCTURE_CONTROLLER && s.structureType !== STRUCTURE_RAMPART && s.hits < s.hitsMax)});
         
+		if(!target && Game.flags['ProxyBreak'] && Game.flags['ProxyBreak'].pos.roomName == creep.room.name)
+		{
+			var toDestroy = Game.flags['ProxyBreak'].pos.findInRange(FIND_STRUCTURES, 0, s => (s.structureType === STRUCTURE_ROAD));
+			if(toDestroy.length && (!creep.room.controller || (creep.room.controller && !creep.room.controller.my)))
+			{
+				if(creep.pos.inRangeTo(toDestroy[0], 1))
+					creep.dismantle(toDestroy[0]);
+				else
+					creep.CivilianMove(toDestroy[0].pos, 1);
+				return;
+			}
+		}
+		
         if(!target)
         {
             var barriers = creep.room.find(FIND_STRUCTURES, {filter: s => (s.hits && (s.structureType === STRUCTURE_WALL || s.structureType === STRUCTURE_RAMPART))});
@@ -52,6 +65,15 @@ CreepRoleProxyBuilder.WorkTarget = function(creep)
     {
         if(Game.time % 10 == 0)
         {
+			if(Game.flags['ProxyBreak'] && Game.rooms[Game.flags['ProxyBreak'].pos.roomName])
+			{
+				var toDestroy = Game.flags['ProxyBreak'].pos.findInRange(FIND_STRUCTURES, 0, s => (s.structureType === STRUCTURE_ROAD));
+				if(toDestroy.length)
+				{
+					creep.memory.proxyTarget = Game.flags['ProxyBreak'].pos.roomName;
+					return;
+				}
+			}
             for(var a in Memory.outpostNames[creep.memory.spawnRoom])
             {
                 if(Game.rooms[Memory.outpostNames[creep.memory.spawnRoom][a]] && !Game.rooms[Memory.outpostNames[creep.memory.spawnRoom][a]].find(FIND_HOSTILE_CREEPS, {filter: c => (c.body.length > 1)}).length)
@@ -64,7 +86,6 @@ CreepRoleProxyBuilder.WorkTarget = function(creep)
                     if(Game.rooms[Memory.outpostNames[creep.memory.spawnRoom][a]].find(FIND_STRUCTURES, {filter: s => (s.hits && (s.structureType === STRUCTURE_ROAD || s.structureType === STRUCTURE_CONTAINER) && s.hits <= s.hitsMax - Math.min(s.hitsMax / 2, creep.store.getCapacity(RESOURCE_ENERGY) * 100))}).length)
                     {
                         creep.memory.proxyTarget = Memory.outpostNames[creep.memory.spawnRoom][a];
-                        return;
                     }
                 }
             }

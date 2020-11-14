@@ -40,7 +40,7 @@ var BaseBasherManager =
 						var baseBashers = spawnManager.GlobalCreepsByRole('baseBasher').filter(c => (c.memory.garrisonRoom == null && c.memory.spawnRoom == spawn.room.name));
 						if(baseBashers.length)
 						    baseBashers = _.sortBy(baseBashers, b => (b.ticksToLive)); 
-                        if((!baseBashers.length && !spawn.room.find(FIND_MY_CREEPS, {filter: c => (c.memory.role == 'baseBasher')}).length) || (baseBashers.length && baseBashers[0].ticksToLive > 900))
+                        if((!baseBashers.length && !spawn.room.find(FIND_MY_CREEPS, {filter: c => (c.memory.role == 'baseBasher')}).length) || (baseBashers.length && baseBashers[0].ticksToLive > 1000))
 						{
 						    
 							this.spawnDone[r] = false;
@@ -49,7 +49,7 @@ var BaseBasherManager =
 								spawnManager.SpawnCreep(spawn, 'baseBasher', baseBasherBody, {waitForHealer: true, garrisoned: false, numGarrison: 1000, garrisonTarget: null});
 						}else
 						{
-						    var all = spawnManager.GlobalCreeps().filter(c => (c.memory.role == 'baseBasher' && c.memory.spawnRoom == spawn.room.name && (c.memory.garrisonTarget == undefined | c.memory.garrisonTarget == Memory.militaryFlagNames['baseBash'][i])));
+						    var all = spawnManager.GlobalCreeps().filter(c => (c.memory.role == 'baseBasher' && c.memory.spawnRoom == spawn.room.name && c.memory.garrisonTarget == undefined));
 						    
 						    if(spawnManager.GlobalCreeps().filter(c => (c.memory.role == 'healer' && c.memory.spawnRoom == spawn.room.name)).length >= all.length)
 						    {
@@ -58,12 +58,10 @@ var BaseBasherManager =
     						        all[i].memory.numGarrison = baseBashers.length;
     						        all[i].memory.garrisonTarget = Memory.militaryFlagNames['baseBash'][i];
     						    }
+    						    this.spawnDone[r] = true;
 						    }
 						}
-                    }else
-					{
-						this.spawnDone[r] = true;
-					}
+                    }
                 }
             }else
 			{

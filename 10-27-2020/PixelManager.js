@@ -1,4 +1,6 @@
 
+var marketManager = require("MarketManager");
+
 var PixelManager = 
 {
 	run: function()
@@ -17,33 +19,40 @@ var PixelManager =
 	    if(pixelOrders.length)
 	    {
 	        var avgChanged = this.AveragePrice();
-	        if(avgChanged == true && this.pixelAverage)
+			//652 is 620 / .95, rounded down
+	        if(avgChanged == true && Memory.pixelSellPrice && Memory.pixelSellPrice >= 652)
 	        {
 	            var oldPrice = pixelOrders[0].price;
-	            Game.market.changeOrderPrice(pixelOrders[0].id, this.pixelAverage);
-	            Game.notify("Changed price from " + oldPrice + " to " + this.pixelAverage);
+	            Game.market.changeOrderPrice(pixelOrders[0].id, Memory.pixelSellPrice);
+	            Game.notify("Changed price from " + oldPrice + " to " + Memory.pixelSellPrice);
 	            if(pixelOrders[0].amount < pixelOrders[0].totalAmount)
 	            {
 	                var amountToAdd = Math.min(Game.resources.pixels - pixelOrders[0].amount, pixelOrders[0].totalAmount - pixelOrders[0].amount);
 	                if(amountToAdd > 0)
 	                {
 	                    Game.market.extendOrder(pixelOrders[0].id, amountToAdd);
-	                    Game.notify("PIXEL ORDER EXTENDED BY: " + amountToAdd);
+	                    Game.notify("PIXEL ORDER EXTENDED BY: " + amountToAdd + "units");
 	                }
 	            }
-	        }else if(this.pixelAverage && Game.resources.pixel > pixelOrders[0].amount)
+	        }else if(Game.resources.pixel > pixelOrders[0].amount)
 	        {
-	            
+				
+				var sellPrice = null;
+				if(Memory.pixelSellPrice)
+					sellPrice = Memory.pixelSellPrice;
+				else
+					sellPrice = 652;
+				
 	            var buyOrders = Game.market.getAllOrders({type: ORDER_BUY, resourceType: PIXEL});
         	    buyOrders = _.sortBy(buyOrders, o => -(o.price));
         	    
-        	    if(buyOrders.length && buyOrders[0].price >= this.pixelAverage * 0.95)
+        	    if(buyOrders.length && buyOrders[0].price >= sellPrice * 0.95)
         	    {
         	        var buyAmount = Math.min(buyOrders[0].amount, Game.resources.pixel - pixelOrders[0].amount);
         	        if(buyAmount > 0)
         	        {
             	        Game.market.deal(buyOrders[0].id, buyAmount);
-            	        Game.notify("USE PIXEL BUY ORDER FOR " + Math.min(buyOrders[0].amount, 500).toString() + " units at " + buyOrders[0].price.toString());
+            	        Game.notify("USE PIXEL BUY ORDER FOR " + buyAmount.toString() + " units at " + buyOrders[0].price.toString());
         	        }   
         	    }
 	        }
@@ -52,12 +61,12 @@ var PixelManager =
 	        
 	       this.AveragePrice();
     	    
-    	    if(this.pixelAverage)
+    	    if(Memory.pixelSellPrice)
     	    {
         	    var buyOrders = Game.market.getAllOrders({type: ORDER_BUY, resourceType: PIXEL});
         	    buyOrders = _.sortBy(buyOrders, o => -(o.price));
         	    
-        	    if(!buyOrders.length || (buyOrders.length && oldAverage * 0.95 > buyOrders[0].price))
+        	    if(!buyOrders.length || (buyOrders.length && Memory.pixelSellPrice * 0.95 > buyOrders[0].price))
         	    {
         	        //Create order at old average
         	        if(Game.resources.pixel >= 500 && Game.time % 9000 == 0)
@@ -65,16 +74,16 @@ var PixelManager =
             	        Game.market.createOrder({
             	            type: ORDER_SELL,
             	            resourceType: PIXEL,
-            	            price: oldAverage,
+            	            price: Memory.pixelSellPrice,
             	            totalAmount: 500
             	        });
-            	        Game.notify("SELL 500 PIXELS at " + oldAverage);
+            	        Game.notify("SETUP SELL 500 PIXELS at " + Memory.pixelSellPrice);
         	        }
         	    }else if(buyOrders.length)
         	    {
         	        //Use buy order
+					Game.notify("USE PIXEL BUY ORDER FOR " + Math.min(buyOrders[0].amount, Game.resources.pixel).toString() + " units at " + buyOrders[0].price.toString());
         	        Game.market.deal(buyOrders[0].id, Math.min(buyOrders[0].amount, Game.resources.pixel));
-        	        Game.notify("USE PIXEL BUY ORDER FOR " + Math.min(buyOrders[0].amount, 500).toString() + " units at " + buyOrders[0].price.toString());
         	    }
     	    }
 	    }
@@ -85,35 +94,30 @@ var PixelManager =
 	{
 	    var day = (new Date(Date.now())).getDate();
 	    
-	    if(this.pixelAverage === undefined | (Memory.pixelDay === undefined || (Memory.pixelDay !== undefined && Memory.pixelDate != day)))
+	    if(Memory.pixelSellPrice === undefined | marketManager.ShouldRunPixel() == true)
 	    {
+	        var allOrders = Game.market.getAllOrders({type: ORDER_SELL, resourceType: PIXEL});
+	        allOrders = _.sortBy(allOrders, o => (o.price));
 	        
-	        
-	        var history = Game.market.getHistory(PIXEL);
-    	    var totalSold = 0;
-    	    var totalValue = 0;
+			var runningTotal = 0;
+	        var index = 0;
+	        for(index = 0; runningTotal < 1000 && index < allOrders.length; index++)
+	        {
+	            runningTotal += allOrders[index].remainingAmount;
+	        }
+	        if(index > 0)
+	            index--;
     	    
-    	    for(var i = 0; i < 3; i++)
+    	    if(allOrders[index].price >= 620)
     	    {
-    	        totalValue += history[history.length - 2 - i].avgPrice * history[history.length - 2 - i].volume;
-    	        totalSold += history[history.length - 2 - i].volume;
-    	    }
-    	    
-    	    var avg = totalValue / totalSold;
-    	    if(avg >= 650)
-    	    {
-    	        this.pixelAverage = Math.ceil(avg * 100) / 100;
-	            Game.notify("PIXEL AVERAGE SET: " + this.pixelAverage);
+    	        Memory.pixelSellPrice = allOrders[index].price - 0.001;
+	            Game.notify("PIXEL AVERAGE SET: " + Memory.pixelSellPrice);
+				return true;
     	    }else
     	    {
-    	        delete this.pixelAverage;
+    	        Memory.pixelSellPrice = false;
+				return false;
     	    }
-	        
-	        if(Memory.pixelDay != day)
-	        {
-	            Memory.pixelDay = day;
-	            return true;
-	        }
 	    }
 	    
 	    return false;
