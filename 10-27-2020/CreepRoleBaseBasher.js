@@ -56,9 +56,9 @@ CreepRoleBaseBasher.WorkTarget = function(creep)
     if(creep.room.name == creep.memory.proxyTarget)
 	{
 		if(target)
-			creep.say('RAID!!!');
+			creep.SayMultiple(['RAID!!!', 'CHARGE!', 'ATTACK!', 'KILL!!!']);
 		else
-			creep.say('VICTORY!');
+			creep.SayMultiple(['VICTORY', 'HORRAY', 'YEAH']);
 	}
     return target;
 }

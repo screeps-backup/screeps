@@ -5,7 +5,7 @@ var CreepRoleProxyCarrier = Object.create(creepRoleCarrier);
 
 CreepRoleProxyCarrier.run = function(creep)
 {
-    if(creep.memory.proxyTarget && (!Game.rooms[creep.memory.proxyTarget] || (Game.rooms[creep.memory.proxyTarget] && Game.rooms[creep.memory.proxyTarget].find(FIND_HOSTILE_CREEPS, {filter: c => (c.body.length > 1)}).length > 0)))
+    if(creep.memory.proxyTarget && creep.room.name != creep.memory.spawnRoom && creep.room.find(FIND_HOSTILE_CREEPS, {filter: c => (c.body.length > 1)}).length > 0)
     {
         delete creep.memory.proxyTarget;
         
@@ -16,15 +16,16 @@ CreepRoleProxyCarrier.run = function(creep)
         return;
     }
     
+	if(creep.memory.proxyTarget)
+		creep.say(creep.memory.proxyTarget);
     
     var working = creep.memory.isWorking === true;
     var isWorking = this.IsWorking(creep);
     if(working != isWorking)
     {
         creep.ResetMemory();
-        delete creep.memory.proxyTarget;
     }
-    if(creep.memory.proxyTarget && creep.room.name !== creep.memory.proxyTarget && Game.rooms[creep.memory.proxyTarget] && Game.rooms[creep.memory.proxyTarget].find(FIND_HOSTILE_CREEPS, {filter: c => (c.body.length > 1)}).length == 0)
+    if(creep.memory.proxyTarget && creep.room.name !== creep.memory.proxyTarget && Game.rooms[creep.memory.proxyTarget])
     {
 		creep.CivilianExitMove(creep.memory.proxyTarget);
     }else
@@ -44,49 +45,51 @@ CreepRoleProxyCarrier.OffWork = function(creep, target)
 CreepRoleProxyCarrier.OffTarget = function(creep)
 {
     var target = Game.getObjectById(creep.memory.offTargetID);
-    if(target && ((target.energy && target.energy > 0)))
-        return target;
-    if(target && (target.store &&  target.store[RESOURCE_ENERGY] > 0))
+    if(target && Game.rooms[target.pos.roomName] && (target.store &&  target.store[RESOURCE_ENERGY] > 0) && creep.HasCivPath(target) == true)
         return target;
     
     target = null;
-    if((Game.rooms[creep.memory.proxyTarget] && !Game.rooms[creep.memory.proxyTarget].find(FIND_STRUCTURES, {filter: s => (s.structureType == STRUCTURE_CONTAINER && s.store[RESOURCE_ENERGY] >= creep.store.getCapacity())}).length > 0) || !Game.rooms[creep.memory.proxyTarget])
+	delete creep.memory.offTargetID;
+    if(!creep.memory.proxyTarget || (creep.memory.proxyTarget && creep.memory.proxyTarget == creep.memory.spawnRoom))
     {
         if(Memory.outpostNames && Memory.outpostNames[creep.memory.spawnRoom])
         {
             if(creep.room.name == creep.memory.spawnRoom)
             {
-                if(!target)
-                {
-        			for(var i in Memory.outpostNames[creep.memory.spawnRoom])
-                    {
-                        if(Game.rooms[Memory.outpostNames[creep.memory.spawnRoom][i]])
-                        {
-            				var tombstones = Game.rooms[Memory.outpostNames[creep.memory.spawnRoom][i]].find(FIND_TOMBSTONES, {filter: t => (t.store[RESOURCE_ENERGY] >= creep.store.getCapacity() / 2 && t.pos.findInRange(FIND_STRUCTURES, 2, {filter: s => (s.structureType === STRUCTURE_ROAD)}).length > 0 && !creep.OtherCreepsOnOffTarget(t.id))});
-            				if(tombstones.length)
-            				{
-            					tombstones = _.sortBy(tombstones, t => -(t.store[RESOURCE_ENERGY]));
-            					target = tombstones[0];
-            				}
-                        }
-        			}
-                }
-				
-				if(!target)
-                {
-        			for(var i in Memory.outpostNames[creep.memory.spawnRoom])
-                    {
-						if(Game.rooms[Memory.outpostNames[creep.memory.spawnRoom][i]])
+				if(!creep.memory.proxyTarget || (creep.memory.proxyTarget && !Game.rooms[creep.memory.proxyTarget]))
+				{
+					if(!target)
+					{
+						for(var i in Memory.outpostNames[creep.memory.spawnRoom])
 						{
-							var dropped = Game.rooms[Memory.outpostNames[creep.memory.spawnRoom][i]].find(FIND_DROPPED_RESOURCES, {filter: t => (t.resourceType === RESOURCE_ENERGY && t.amount >= creep.store.getCapacity() / 2 && t.pos.findInRange(FIND_STRUCTURES, 2, {filter: s => (s.structureType === STRUCTURE_ROAD)}).length > 0 && !creep.OtherCreepsOnOffTarget(t.id))});
-							if(dropped.length)
+							if(Game.rooms[Memory.outpostNames[creep.memory.spawnRoom][i]] && Game.rooms[Memory.outpostNames[creep.memory.spawnRoom][i]].find(FIND_HOSTILE_CREEPS, {filter: c => (c.body.length > 1)}).length == 0)
 							{
-								dropped = _.sortBy(dropped, t => -(t.amount));
-								target = dropped[0];
+								var tombstones = Game.rooms[Memory.outpostNames[creep.memory.spawnRoom][i]].find(FIND_TOMBSTONES, {filter: t => (t.store[RESOURCE_ENERGY] >= creep.store.getCapacity() / 2 && t.pos.findInRange(FIND_STRUCTURES, 2, {filter: s => (s.structureType === STRUCTURE_ROAD)}).length > 0 && !creep.OtherCreepsOnOffTarget(t.id))});
+								if(tombstones.length)
+								{
+									tombstones = _.sortBy(tombstones, t => -(t.store[RESOURCE_ENERGY]));
+									target = tombstones[0];
+								}
 							}
 						}
 					}
-                }
+				
+					if(!target)
+					{
+						for(var i in Memory.outpostNames[creep.memory.spawnRoom])
+						{
+							if(Game.rooms[Memory.outpostNames[creep.memory.spawnRoom][i]] && Game.rooms[Memory.outpostNames[creep.memory.spawnRoom][i]].find(FIND_HOSTILE_CREEPS, {filter: c => (c.body.length > 1)}).length == 0)
+							{
+								var dropped = Game.rooms[Memory.outpostNames[creep.memory.spawnRoom][i]].find(FIND_DROPPED_RESOURCES, {filter: t => (t.resourceType === RESOURCE_ENERGY && t.amount >= creep.store.getCapacity() / 2 && t.pos.findInRange(FIND_STRUCTURES, 2, {filter: s => (s.structureType === STRUCTURE_ROAD)}).length > 0 && !creep.OtherCreepsOnOffTarget(t.id))});
+								if(dropped.length)
+								{
+									dropped = _.sortBy(dropped, t => -(t.amount));
+									target = dropped[0];
+								}
+							}
+						}
+					}
+				}
             }else
 			{
 				if(!target)
@@ -123,46 +126,46 @@ CreepRoleProxyCarrier.OffTarget = function(creep)
 				}
 			}
 			
-			if(!target && creep.room.name == creep.memory.spawnRoom)
+			if(!target)
 			{
-				containers = [];
-				for(var i in Memory.outpostNames[creep.memory.spawnRoom])
+				if(!creep.memory.proxyTarget || (creep.memory.proxyTarget && creep.memory.proxyTarget == creep.memory.spawnRoom))
 				{
-					if(Game.rooms[Memory.outpostNames[creep.memory.spawnRoom][i]] && Game.rooms[Memory.outpostNames[creep.memory.spawnRoom][i]].find(FIND_HOSTILE_CREEPS, {filter: c => (c.body.length > 1)}).length == 0)
-						containers = containers.concat(Game.rooms[Memory.outpostNames[creep.memory.spawnRoom][i]].find(FIND_STRUCTURES, {filter: s => (s.structureType == STRUCTURE_CONTAINER && s.store[RESOURCE_ENERGY] > 0)}));
-				}
-				
-				var least = creep.LeastOtherCreepsOnOffTarget(containers);
-				
-				if(least.length)
-				{
-				    least = _.sortBy(least, l => -(l.store[RESOURCE_ENERGY]));
-				    target = least[0];
+					containers = [];
+					for(var i in Memory.outpostNames[creep.memory.spawnRoom])
+					{
+						if(Game.rooms[Memory.outpostNames[creep.memory.spawnRoom][i]] && Game.rooms[Memory.outpostNames[creep.memory.spawnRoom][i]].find(FIND_HOSTILE_CREEPS, {filter: c => (c.body.length > 1)}).length == 0)
+							containers = containers.concat(Game.rooms[Memory.outpostNames[creep.memory.spawnRoom][i]].find(FIND_STRUCTURES, {filter: s => (s.structureType == STRUCTURE_CONTAINER && s.store[RESOURCE_ENERGY] > 0)}));
+					}
+					
+					var least = creep.LeastOtherCreepsOnOffTarget(containers);
+					
+					if(least.length)
+					{
+						least = _.sortBy(least, l => -(l.store[RESOURCE_ENERGY]));
+						target = least[0];
+					}
 				}
 			}
         }
     }else if(!target && creep.room.name == creep.memory.proxyTarget)
     {
-        var containers = creep.room.find(FIND_STRUCTURES, {filter: s => (s.structureType == STRUCTURE_CONTAINER && s.store[RESOURCE_ENERGY] >= creep.store.getFreeCapacity(RESOURCE_ENERGY) && creep.room.find(FIND_MY_CREEPS, {filter: c => (c.memory.role == creep.memory.role && c.memory.offTargetID == s.id)}).length == 0)});
-        if(containers.length)
+        var containers = creep.room.find(FIND_STRUCTURES, {filter: s => (s.structureType == STRUCTURE_CONTAINER && s.store[RESOURCE_ENERGY] > 0 && creep.HasCivPath(s) == true && creep.room.find(FIND_MY_CREEPS, {filter: c => (c.memory.role == creep.memory.role && c.memory.offTargetID == s.id)}).length == 0)});
+        var least = creep.LeastOtherCreepsOnOffTarget(containers);
+		if(least.length)
         {
-            containers = _.sortBy(containers, c => -(_.sum(c.store)));
-            target = containers[0];
+            least = _.sortBy(least, c => -(_.sum(c.store)));
+            target = least[0];
         }
     }
-    
-    if(!target)
-        creep.AvoidEdges();
-    
         
     if(target)
     {
         creep.memory.offTargetID = target.id;
         return target
-    }else if(_.sum(creep.store) < creep.store.getCapacity())
-    {
-        creep.memory.isWorking = false;
-    }
+    }else
+	{
+		creep.AvoidEdges();
+	}
     return null;
 }
 CreepRoleProxyCarrier.Work = function(creep, target)
@@ -192,7 +195,7 @@ CreepRoleProxyCarrier.Work = function(creep, target)
 CreepRoleProxyCarrier.WorkTarget = function(creep)
 {
     var target = Game.getObjectById(creep.memory.workTargetID);
-    if(target && ((target.energy && target.energyCapacity - target.energy >= creep.store.getUsedCapacity(RESOURCE_ENERGY)) | (target.store && target.store.getCapacity() - _.sum(target.store) >= _.sum(creep.store))))
+    if(target && creep.HasCivPath(target) == true && ((target.energy && target.energyCapacity - target.energy >= creep.store.getUsedCapacity(RESOURCE_ENERGY)) | (target.store && target.store.getCapacity() - _.sum(target.store) >= _.sum(creep.store))) != 0)
     {
         return target;
     }

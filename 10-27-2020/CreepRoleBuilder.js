@@ -20,7 +20,7 @@ CreepRoleBuilder.IsWorking = function(creep)
 CreepRoleBuilder.WorkTarget = function(creep)
 {
     var target = Game.getObjectById(creep.memory.workTargetID);
-    if(target && target.room.name == creep.room.name && ((target instanceof ConstructionSite) == true || (!(target instanceof ConstructionSite) != true && target.hits && target.hits < target.hitsMax)))
+    if(target && target.room.name == creep.room.name && ((target instanceof ConstructionSite) == true || ((target instanceof ConstructionSite) != true && target.hits && target.hits < target.hitsMax)))
         return target;
     
     delete creep.memory.workTargetID;
@@ -76,13 +76,13 @@ CreepRoleBuilder.Work = function(creep, target)
         }
     }else
     {
-        creep.CivilianMove(target.pos, 1);
+        creep.CivilianMove(target.pos, 3);
     }
 }
 CreepRoleBuilder.OffTarget = function(creep)
 {
     var target = Game.getObjectById(creep.memory.offTargetID);
-    if(target && target.room.name == creep.room.name && ((target.store && target.store[RESOURCE_ENERGY] >= creep.store.getFreeCapacity(RESOURCE_ENERGY)) | (target.energy && target.energy > 0)))
+    if(target && target.room.name == creep.room.name && ((target.store && target.store[RESOURCE_ENERGY] >= creep.store.getFreeCapacity(RESOURCE_ENERGY)) || (target.energy && target.energy > 0)))
         return target;
     
     delete creep.memory.offTargetID;
@@ -90,6 +90,9 @@ CreepRoleBuilder.OffTarget = function(creep)
     
     if(!target && creep.room.find(FIND_MY_CREEPS, {filter: c => (c.memory.role === 'miner')}).length == 0)
         target = creep.pos.findClosestByPath(FIND_SOURCES);
+	
+	if(!target && creep.room.energyCapacityAvailable < 1300)
+		target = creep.pos.findClosestByPath(FIND_SOURCES);
     
     if(target)
     {

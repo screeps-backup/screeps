@@ -7,6 +7,8 @@ var defenderManager = require('DefenderManager');
 const maxBaseBashRemove = 9000;
 var baseBashCountdown = maxBaseBashRemove;
 
+var baseBasherBodies = [new CreepBody({numTough: 2, numMove: 17, numWork: 10, numAttack: 5}), new CreepBody({numTough: 4, numMove: 15, numWork: 6, numAttack: 5})];
+
 var BaseBasherManager = 
 {
     run: function()
@@ -44,7 +46,7 @@ var BaseBasherManager =
 						{
 						    
 							this.spawnDone[r] = false;
-							var baseBasherBody = spawnManager.SelectBody(spawn.room.energyCapacityAvailable, [new CreepBody({numTough: 4, numMove: 15, numWork: 6, numAttack: 5}), new CreepBody({numMove: 8, numWork: 6, numRangedAttack: 2}), new CreepBody({numMove: 5, numWork: 4, numRangedAttack: 1})]);
+							var baseBasherBody = spawnManager.SelectBody(spawn.room.energyCapacityAvailable, baseBasherBodies);
 							if(baseBasherBody)
 								spawnManager.SpawnCreep(spawn, 'baseBasher', baseBasherBody, {waitForHealer: true, garrisoned: false, numGarrison: 1000, garrisonTarget: null});
 						}else

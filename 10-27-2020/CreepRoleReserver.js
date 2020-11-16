@@ -6,7 +6,10 @@ CreepRoleReserver.run = function(creep)
 {
     if(creep.RunAway() == true)
         return;
-    
+ 
+	if(creep.memory.proxyTarget)
+		creep.say(creep.memory.proxyTarget);
+ 
     if(creep.memory.proxyTarget && creep.room.name !== creep.memory.proxyTarget)
     {
 		creep.CivilianExitMove(creep.memory.proxyTarget);

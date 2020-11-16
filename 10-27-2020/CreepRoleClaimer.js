@@ -25,6 +25,9 @@ CreepRoleClaimer.run = function(creep)
 			{
 				creep.CivilianMove(creep.room.controller.pos, 1);
 			}
+		}else
+		{
+			creep.SayMultiple(['All done', 'Bored!']);
 		}
 	}
 }

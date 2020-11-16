@@ -28,6 +28,7 @@ var linkManager = require("LinkManager");
 var pixelManager = require("PixelManager");
 var avoidRoomsManager = require("AvoidRoomsManager");
 var claimManager = require("ClaimManager");
+var moverManager = require("MoverManager");
 
 var creepRole = require("CreepRole");
 
@@ -36,6 +37,7 @@ var creepRoleUpgrader = require("CreepRoleUpgrader");
 var creepRoleBuilder = require("CreepRoleBuilder");
 var creepRoleCarrier = require("CreepRoleCarrier");
 var creepRoleLoader = require("CreepRoleLoader");
+var creepRoleMover = require("CreepRoleMover");
 
 var creepRoleScout = require("CreepRoleScout");
 var creepRoleMapper = require("CreepRoleMapper");
@@ -86,6 +88,9 @@ var RunCreep = function(creep)
         case 'loader':
             creepRoleLoader.run(creep);
             break;
+		case 'mover':
+			creepRoleMover.run(creep);
+			break;
 
         case 'scout':
             creepRoleScout.run(creep);
@@ -178,6 +183,7 @@ module.exports.loop = function ()
 	pixelManager.run();
 	avoidRoomsManager.run();
 	claimManager.run();
+	moverManager.run();
 	
     for(var name in Game.creeps)
         RunCreep(Game.creeps[name]);

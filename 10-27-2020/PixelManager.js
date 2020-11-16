@@ -5,7 +5,7 @@ var PixelManager =
 {
 	run: function()
 	{
-	    if(Game.cpu.bucket >= 9000)
+	    if(Game.cpu.bucket >= 9000 && !Game.flags['BaseBash'])
 			Game.cpu.generatePixel();
 		
 		var pixelOrders = [];
@@ -94,7 +94,7 @@ var PixelManager =
 	{
 	    var day = (new Date(Date.now())).getDate();
 	    
-	    if(Memory.pixelSellPrice === undefined | marketManager.ShouldRunPixel() == true)
+	    if(Memory.pixelSellPrice === undefined || (Memory.pixelSellPrice !== undefined && marketManager.ShouldRunPixel() == true))
 	    {
 	        var allOrders = Game.market.getAllOrders({type: ORDER_SELL, resourceType: PIXEL});
 	        allOrders = _.sortBy(allOrders, o => (o.price));
@@ -116,6 +116,7 @@ var PixelManager =
     	    }else
     	    {
     	        Memory.pixelSellPrice = false;
+				Game.notify('PIXEL PRICE SET FAIL');
 				return false;
     	    }
 	    }

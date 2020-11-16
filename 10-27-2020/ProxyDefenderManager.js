@@ -4,7 +4,7 @@ var spawnManager = require("SpawnManager");
 var alertManager = require("AlertManager");
 var defenderManager = require("DefenderManager");
 
-var proxyDefenderBodies = [new CreepBody({numTough: 1, numMove: 13, numRangedAttack: 2, numAttack: 10}), new CreepBody({numTough: 7, numMove: 13, numRangedAttack: 1, numAttack: 5}), new CreepBody({numMove: 2, numAttack: 2})]
+var proxyDefenderBodies = [new CreepBody({numTough: 5, numMove: 17, numRangedAttack: 2, numAttack: 10}), new CreepBody({numTough: 1, numMove: 13, numRangedAttack: 2, numAttack: 10}), new CreepBody({numTough: 7, numMove: 13, numRangedAttack: 1, numAttack: 5}), new CreepBody({numMove: 2, numAttack: 2})]
 
 var ProxyDefenderManager = 
 {
@@ -55,9 +55,9 @@ var ProxyDefenderManager =
 								
 									
 								//Set the proxy target after the spawning is done
-								if(!spawnManager.GlobalCreeps().filter(c => (c.memory.role == 'proxyDefender' && c.memory.proxyTarget == Memory.outpostNames[roomName][a])).length)
+								if(!spawnManager.GlobalCreeps().filter(c => (c.memory.role == 'proxyDefender' && c.memory.proxyTarget && c.memory.proxyTarget != c.memory.spawnRoom && c.memory.spawnRoom == roomName)).length)
 								{
-									var currentUnits = Game.rooms[roomName].find(FIND_MY_CREEPS, {filter: c => (c.memory.role == 'proxyDefender' && !c.memory.proxyTarget)}) || [];
+									var currentUnits = spawnManager.GlobalCreeps().filter(c => (c.memory.role == 'proxyDefender' && c.memory.spawnRoom == roomName && (c.memory.proxyTarget === undefined || c.memory.proxyTarget == roomName)));
 									if(currentUnits.length < targetUnits)
 									{
 										//Spawn with garrised = false

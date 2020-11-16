@@ -14,7 +14,13 @@ CreepRoleScout.IsWorking = function(creep)
 	//Stay stationary forever after you reach your objective
 		//Standby to objserve
     if(creep.memory.isWorking === false)
+	{
+		creep.SayMultiple(['Done', 'Sittin\'', 'No move']);
         return false;
+	}
+	
+	if(creep.memory.proxyTarget)
+		creep.say(creep.memory.proxyTarget);
     
     var isWorking = !(creep.room.name === creep.memory.proxyTarget && (creep.pos.x > 3 && creep.pos.y > 3 && creep.pos.x < 46 && creep.pos.y < 46));
 	if(isWorking == false)

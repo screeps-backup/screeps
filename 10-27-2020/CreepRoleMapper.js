@@ -1,10 +1,13 @@
 
+var avoidRoomsManager = require("AvoidRoomsManager");
+
 var creepRole = require("CreepRole");
 
 var CreepRoleMapper = Object.create(creepRole);
 
 CreepRoleMapper.run = function(creep)
 {
+	creep.SayMultiple(["SIGNS", "EXPLORE", "MOVING"]);
 	if(creep.room.name != creep.memory.roomName)
 	{
 		if(creep.room.controller && creep.room.controller.owner && !creep.room.controller.my && !creep.room.controller.safeMode)
@@ -14,8 +17,12 @@ CreepRoleMapper.run = function(creep)
 				Game.notify("UNPROTECTED ENEMY BASE: " + creep.room.name, 30);
 			}
 		}
+		if(creep.room.find(FIND_HOSTILE_STRUCTURES, {filter: s => (s.structureType == STRUCTURE_TOWER && s.owner.username == 'Invader')}).length > 0)
+			avoidRoomsManager.AvoidRoom(creep.room.name);
+		else if(creep.room.find(FIND_STRUCTURES, {filter: s => (s.structureType === STRUCTURE_TOWER)}).length == 0)
+			avoidRoomsManager.UnavoidRoom(creep.room.name);
 	}
-	if(creep.room.controller && creep.memory.messageIndex !== undefined && creep.pos.findClosestByPath(FIND_STRUCTURES, {filter: s => (s.structureType == STRUCTURE_CONTROLLER)}) && (!creep.room.controller.sign || (creep.room.controller.sign && creep.room.controller.sign.text != Memory.signMessages[creep.memory.messageIndex])))
+	if(creep.room.controller && creep.memory.messageIndex !== undefined && (!creep.room.controller.sign || (creep.room.controller.sign && creep.room.controller.sign.text != Memory.signMessages[creep.memory.messageIndex])))
 	{
 		if(creep.pos.inRangeTo(creep.room.controller, 1))
 		{
@@ -43,21 +50,17 @@ CreepRoleMapper.run = function(creep)
 				switch(exit)
 				{
 				    case 1:
-				        if(!Memory.avoidRoomNames || (Memory.avoidRoomNames && !Memory.avoidRoomNames.includes(Game.map.describeExits(creep.room.name)[TOP])))
-				            creep.memory.exitPos = creep.pos.findClosestByPath(FIND_EXIT_TOP, {filter: p => (!p.findInRange(FIND_STRUCTURES, 0).length)});
+						this.SetExitPos(creep, FIND_EXIT_TOP);
 				        break;
 				    case 3:
-				        if(!Memory.avoidRoomNames || (Memory.avoidRoomNames && !Memory.avoidRoomNames.includes(Game.map.describeExits(creep.room.name)[RIGHT])))
-				            creep.memory.exitPos = creep.pos.findClosestByPath(FIND_EXIT_RIGHT, {filter: p => (!p.findInRange(FIND_STRUCTURES, 0).length)});
-				        break;
+				        this.SetExitPos(creep, FIND_EXIT_RIGHT);
+						break;
 				    case 5:
-				        if(!Memory.avoidRoomNames || (Memory.avoidRoomNames && !Memory.avoidRoomNames.includes(Game.map.describeExits(creep.room.name)[BOTTOM])))
-				            creep.memory.exitPos = creep.pos.findClosestByPath(FIND_EXIT_BOTTOM, {filter: p => (!p.findInRange(FIND_STRUCTURES, 0).length)});
-				        break;
+				        this.SetExitPos(creep, FIND_EXIT_BOTTOM);
+						break;
 				    case 7:
-				        if(!Memory.avoidRoomNames || (Memory.avoidRoomNames && !Memory.avoidRoomNames.includes(Game.map.describeExits(creep.room.name)[LEFT])))
-				            creep.memory.exitPos = creep.pos.findClosestByPath(FIND_EXIT_LEFT, {filter: p => (!p.findInRange(FIND_STRUCTURES, 0).length)});
-				        break;
+				        this.SetExitPos(creep, FIND_EXIT_LEFT);
+						break;
 				    default:
 				        console.log('no mapper exit');
 				        break;
@@ -71,6 +74,19 @@ CreepRoleMapper.run = function(creep)
 		    var targetPos = new RoomPosition(creep.memory.exitPos.x, creep.memory.exitPos.y, creep.memory.exitPos.roomName);
 			creep.CivilianMove(targetPos);
 		}
+	}
+}
+CreepRoleMapper.SetExitPos = function(creep, findExitDir)
+{
+	if(!Memory.avoidRoomNames || (Memory.avoidRoomNames && !Memory.avoidRoomNames.includes(Game.map.describeExits(creep.room.name)[TOP])))
+	{
+		creep.memory.exitPos = creep.pos.findClosestByPath(findExitDir, {filter: p => (!p.findInRange(FIND_STRUCTURES, 0).length)});
+		return;
+	}
+	if(Math.random() <= 0.1)
+	{
+		creep.memory.exitPos = creep.pos.findClosestByPath(findExitDir, {filter: p => (!p.findInRange(FIND_STRUCTURES, 0).length)});
+		return;
 	}
 }
 

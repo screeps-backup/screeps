@@ -3,6 +3,7 @@
 //LV3: 800
 //LV4: 1300
 //LV5: 1800
+//LV6: 2300
 
 var CreepBody = require("CreepBody");
 var AlertManager = require("AlertManager");
@@ -38,12 +39,11 @@ var SpawnManager =
     },
     SpawnNormal: function(spawn)
     {
-        
         this.normalSpawnDone[spawn.room.name] = false;
         
         var safeToSpawnAll = this.SafeToSpawnAll(spawn.room);
         
-        if(spawn.room.find(FIND_MY_CREEPS, {filter: c => (c.memory.role == 'carrier')}).length == 0 && ((!spawn.room.storage || (spawn.room.storage && spawn.room.storage.store[RESOURCE_ENERGY] < spawn.room.energyCapacityAvailable)) | spawn.room.find(FIND_MY_CREEPS, {filter: c => (c.memory.role == 'loader')}).length == 0))
+        if(spawn.room.find(FIND_MY_CREEPS, {filter: c => (c.memory.role == 'carrier' || c.memory.role == 'loader')}).length == 0 && ((!spawn.room.storage || (spawn.room.storage && spawn.room.storage.store[RESOURCE_ENERGY] < spawn.room.energyCapacityAvailable))))
         {
             if(spawn.room.storage && spawn.room.storage.store[RESOURCE_ENERGY] >= spawn.room.energyCapacityAvailable + 300)
             {
@@ -84,8 +84,12 @@ var SpawnManager =
             {
                 if(spawn.room.controller.level >= 4 && spawn.room.storage && !spawn.room.find(FIND_MY_CREEPS, {filter: c => (c.memory.role == 'loader' && !this.DueToDie(c))}).length)
                 {
-                    var loaderBody = this.SelectBody(spawn.room.energyCapacityAvailable, loaderBodies);
-                    this.SpawnCreep(spawn, 'loader', loaderBody);
+					if(spawn.room.energyCapacityAvailable < 2300)
+					{
+						var loaderBody = this.SelectBody(spawn.room.energyCapacityAvailable, loaderBodies);
+						this.SpawnCreep(spawn, 'loader', loaderBody);
+					}else
+						this.SpawnCreep(spawn, 'loader', [CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, MOVE, MOVE, MOVE, MOVE, MOVE, MOVE, MOVE, MOVE, MOVE, MOVE, MOVE, MOVE]);
                 }else
                 {
                     if((safeToSpawnAll == true && ( ( !(spawn.room.storage && spawn.room.storage.store[RESOURCE_ENERGY] >= 200000) && spawn.room.find(FIND_MY_CREEPS, {filter: c => (c.memory.role == 'upgrader')}).length < 2) || ( (spawn.room.storage && spawn.room.storage.store[RESOURCE_ENERGY] >= 200000) && spawn.room.find(FIND_MY_CREEPS, {filter: c => (c.memory.role == 'upgrader')}).length < 3)) ) || (safeToSpawnAll != true && spawn.room.find(FIND_MY_CREEPS, {filter: c => (c.memory.role == 'upgrader')}).length < 1))
@@ -109,23 +113,30 @@ var SpawnManager =
                         {
                             this.normalSpawnDone[spawn.room.name] = true;
                             
-                            if(safeToSpawnAll == true)
+                            if(safeToSpawnAll == true && Game.cpu.bucket >= 3500 && Game.cpu.getUsed() <= 15)
                             {
                                 //Build extra builders in case of attack by a player
-								if(spawn.room.find(FIND_MY_CONSTRUCTION_SITES).length > 0 && (((spawn.room.controller.level < 5 | spawn.room.energyCapacityAvailable < 1000) && ((AlertManager.OnAlert(spawn.room.name) == true && spawn.room.find(FIND_MY_CREEPS, {filter: c => (c.memory.role == 'builder')}).length < 3) || (AlertManager.OnAlert(spawn.room.name) != true && spawn.room.find(FIND_MY_CREEPS, {filter: c => (c.memory.role == 'builder')}).length < 8))) || (!(spawn.room.controller.level < 5 | spawn.room.energyCapacityAvailable < 1000) && spawn.room.find(FIND_MY_CREEPS, {filter: c => (c.memory.role == 'builder')}).length < 3)))
-                                {
-                                    var builderBody = this.SelectBody(spawn.room.energyCapacityAvailable, builderBodies);
-                                    this.SpawnCreep(spawn, 'builder', builderBody);
-                                }else if(AlertManager.OnAlert(spawn.room.name) == true && spawn.room.find(FIND_MY_CREEPS, {filter: c => (c.memory.role == 'builder')}).length < 4)
+								if(spawn.room.find(FIND_MY_CONSTRUCTION_SITES).length > 0 && ((spawn.room.energyCapacityAvailable < 1000 && ((AlertManager.OnAlert(spawn.room.name) == true && spawn.room.find(FIND_MY_CREEPS, {filter: c => (c.memory.role == 'builder')}).length < 3) || (AlertManager.OnAlert(spawn.room.name) != true && spawn.room.find(FIND_MY_CREEPS, {filter: c => (c.memory.role == 'builder')}).length < 8))) || (spawn.room.energyCapacityAvailable >= 1000 && spawn.room.find(FIND_MY_CREEPS, {filter: c => (c.memory.role == 'builder')}).length < 3)))
 								{
 									var builderBody = this.SelectBody(spawn.room.energyCapacityAvailable, builderBodies);
-                                    this.SpawnCreep(spawn, 'builder', builderBody);
+									this.SpawnCreep(spawn, 'builder', builderBody);
+								}else if(AlertManager.OnAlert(spawn.room.name) == true && spawn.room.find(FIND_MY_CREEPS, {filter: c => (c.memory.role == 'builder')}).length < 4)
+								{
+									var builderBody = this.SelectBody(spawn.room.energyCapacityAvailable, builderBodies);
+									this.SpawnCreep(spawn, 'builder', builderBody);
 								}else if(!(spawn.room.controller.level >= 4 && spawn.room.energyCapacityAvailable >= 1300 && spawn.room.storage) && AlertManager.OnAlert(spawn.room.name) == false && !spawn.room.find(FIND_MY_CONSTRUCTION_SITES).length && !Game.flags['BaseBash'] && spawn.room.find(FIND_MY_CREEPS, {filter: c => (c.memory.role == 'builder')}).length < 6 && spawn.room.find(FIND_MY_CREEPS, {filter: c => (c.memory.role == 'upgrader')}).length < 5)
-                                {
-                                    var upgraderBody = this.SelectBody(spawn.room.energyCapacityAvailable, normalUpgraderBodies);
-    							    this.SpawnCreep(spawn, 'upgrader', upgraderBody);
-                                }
-                            }
+								{
+									var upgraderBody = this.SelectBody(spawn.room.energyCapacityAvailable, normalUpgraderBodies);
+									this.SpawnCreep(spawn, 'upgrader', upgraderBody);
+								}
+                            }else
+							{
+								if(AlertManager.OnAlert(spawn.room.name) == true && spawn.room.find(FIND_MY_CREEPS, {filter: c => (c.memory.role == 'builder')}).length < 3)
+								{
+									var builderBody = this.SelectBody(spawn.room.energyCapacityAvailable, builderBodies);
+									this.SpawnCreep(spawn, 'builder', builderBody);
+								}
+							}
                         }
                     }
                 }
@@ -135,11 +146,7 @@ var SpawnManager =
     SpawnCreep: function(spawn, roleName, body, memory)
     {
         if(!body)
-        {
-            console.log("INVALID SPAWN BODY");
-            Game.notify("INVALID SPAWN BODY");
             return;
-        }
         
         var mem = {role: roleName, spawnRoom: spawn.room.name};
         if(memory)

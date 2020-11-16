@@ -26,7 +26,7 @@ CreepRoleMiner.IsWorking = function(creep)
         if(_.sum(creep.store) == creep.store.getCapacity())
         {
             var offTarget = this.OffTarget(creep);
-            if(!offTarget || (offTarget && ((offTarget instanceof ConstructionSite) | !creep.pos.inRangeTo(offTarget, 0) | offTarget.pos.findInRange(FIND_STRUCTURES, 1, {filter: s => (s.structureType === STRUCTURE_CONTAINER && s.store.getFreeCapacity(RESOURCE_ENERGY) == 0)}).length > 0)))
+            if(!offTarget || (offTarget && ((offTarget instanceof ConstructionSite) | !creep.pos.inRangeTo(offTarget, 0) | offTarget.pos.findInRange(FIND_STRUCTURES, 1, {filter: s => (s.structureType === STRUCTURE_CONTAINER && s.store.getFreeCapacity(RESOURCE_ENERGY) == 0)}).length > 0) != 0))
                 creep.memory.isWorking = false;
         }
     }else
@@ -65,7 +65,7 @@ CreepRoleMiner.Work = function(creep, target)
 CreepRoleMiner.OffTarget = function(creep)
 {
     var target = Game.getObjectById(creep.memory.offTargetID);
-    if(target && (target.energy < target.energyCapacity | (target.store && target.store[RESOURCE_ENERGY] < target.store.getCapacity(RESOURCE_ENERGY))))
+    if(target && (target.energy < target.energyCapacity | (target.store && target.store[RESOURCE_ENERGY] < target.store.getCapacity(RESOURCE_ENERGY))) != 0)
         return target;
     
     target = null;

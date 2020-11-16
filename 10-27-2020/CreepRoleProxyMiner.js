@@ -7,6 +7,9 @@ var CreepRoleProxyMiner = Object.create(creepRoleMiner);
 
 CreepRoleProxyMiner.LeastTicksOnWorkTarget = function(creep, targets)
 {
+	if(creep.memory.proxyTarget)
+		creep.say(creep.memory.proxyTarget);
+	
 	var allMyRole = SpawnManager.GlobalCreeps().filter(c => (c.memory.role == creep.memory.role));
     var leastTicksTarget = null;
     for(var i in allMyRole)
@@ -32,9 +35,9 @@ CreepRoleProxyMiner.run = function(creep)
         return;
     
     var isWorking = this.IsWorking(creep);
-    if(!creep.memory.workTargetID && creep.memory.proxyTarget && creep.room.name !== creep.memory.proxyTarget)
+    if(creep.memory.proxyTarget && creep.room.name !== creep.memory.proxyTarget)
 		creep.CivilianExitMove(creep.memory.proxyTarget);
-    else if(creep.pos.x == 0 | creep.pos.x == 49 | creep.pos.y == 0 | creep.pos.y == 49)
+    else if((creep.pos.x == 0 | creep.pos.x == 49 | creep.pos.y == 0 | creep.pos.y == 49) != 0)
         creep.AvoidEdges();
     else if(creep.memory.proxyTarget && creep.room.name == creep.memory.proxyTarget)
         creepRoleMiner.run.call(this, creep);
@@ -42,10 +45,10 @@ CreepRoleProxyMiner.run = function(creep)
 CreepRoleProxyMiner.WorkTarget = function(creep)
 {
     var target = Game.getObjectById(creep.memory.workTargetID);
-    if(target)
+    if(target && creep.HasCivPath(target) == true)
         return target;
         
-    var sources = creep.room.find(FIND_SOURCES);
+    var sources = creep.room.find(FIND_SOURCES, {filter: s => (creep.HasCivPath(s) == true)});
     var least = creep.LeastOtherCreepsOnWorkTarget(sources);
     if(least.length > 1)
     {

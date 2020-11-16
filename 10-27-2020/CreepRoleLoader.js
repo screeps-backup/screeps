@@ -21,31 +21,31 @@ CreepRoleLoader.IsWorking = function(creep)
 CreepRoleLoader.WorkTarget = function(creep)
 {
     var target = Game.getObjectById(creep.memory.workTargetID);
-    if(target && ((target.energy && target.energy < target.energyCapacity) | (target.store && _.sum(target.store) < target.storeCapacity)))
+    if(target && ((target.energy && target.energy < target.energyCapacity) || (target.store && _.sum(target.store) < target.storeCapacity)) && creep.HasCivPath(target) == true)
         return target;
     
     target = null;
     
-    if((alertManager.OnAlert(creep.room.name) == true | creep.room.find(FIND_HOSTILE_CREEPS, {filter: c => (c.body.length > 1)}).length > 0) && creep.room.storage && creep.room.storage.store[RESOURCE_ENERGY] >= 50000)
-        target = creep.pos.findClosestByRange(FIND_MY_STRUCTURES, {filter: s => (s.structureType == STRUCTURE_TOWER && s.store.getFreeCapacity(RESOURCE_ENERGY) >= Math.min(creep.store.getCapacity(), 800))});
+    if((alertManager.OnAlert(creep.room.name) == true | creep.room.find(FIND_HOSTILE_CREEPS, {filter: c => (c.body.length > 1)}).length > 0) != 0 && creep.room.storage && creep.room.storage.store[RESOURCE_ENERGY] >= 50000)
+        target = creep.pos.findClosestByRange(FIND_MY_STRUCTURES, {filter: s => (s.structureType == STRUCTURE_TOWER && s.store.getFreeCapacity(RESOURCE_ENERGY) >= Math.min(creep.store.getCapacity(), 800) && creep.HasCivPath(s) == true)});
     
     if(!target)
-        target = creep.pos.findClosestByRange(FIND_MY_STRUCTURES, {filter: s => ((s.structureType === STRUCTURE_EXTENSION && s.energy < s.energyCapacity) || (s.structureType === STRUCTURE_SPAWN && s.store[RESOURCE_ENERGY] < s.store.getCapacity(RESOURCE_ENERGY)))});
+        target = creep.pos.findClosestByRange(FIND_MY_STRUCTURES, {filter: s => (((s.structureType === STRUCTURE_EXTENSION && s.energy < s.energyCapacity) || (s.structureType === STRUCTURE_SPAWN && s.store[RESOURCE_ENERGY] < s.store.getCapacity(RESOURCE_ENERGY))) && creep.HasCivPath(s) == true)});
     
     if(!target && creep.store[RESOURCE_ENERGY] > creep.store.getCapacity() / 2)
     {
         if(alertManager.OnAlert(creep.room.name) != true)
-            target = creep.pos.findClosestByRange(FIND_MY_STRUCTURES, {filter: s => (s.structureType == STRUCTURE_TOWER && s.store.getFreeCapacity(RESOURCE_ENERGY) >= Math.min(creep.store.getCapacity(), 800))});
+            target = creep.pos.findClosestByRange(FIND_MY_STRUCTURES, {filter: s => ((s.structureType == STRUCTURE_TOWER && s.store.getFreeCapacity(RESOURCE_ENERGY) >= Math.min(creep.store.getCapacity(), 800)) && creep.HasCivPath(s) == true)});
     
         if(!target)
     	{
     	    var loaderLink = linkManager.LoaderLink(creep.room);
-    	    if(loaderLink && loaderLink.store.getFreeCapacity(RESOURCE_ENERGY) > 0)
+    	    if(loaderLink && loaderLink.store.getFreeCapacity(RESOURCE_ENERGY) > 0 && creep.HasCivPath(loaderLink) == true)
     		    target = loaderLink;
     	}
     	
     	if(!target && creep.room.controller && creep.room.storage && creep.room.storage.pos.inRangeTo(creep.room.controller.pos, 10) && creep.room.storage.store[RESOURCE_ENERGY] >= 150000)
-    	    target = creep.room.controller.pos.findInRange(FIND_STRUCTURES, 1, {filter: s => (s.structureType === STRUCTURE_CONTAINER && s.store.getFreeCapacity(RESOURCE_ENERGY) >= creep.store[RESOURCE_ENERGY])})[0] || null;
+    	    target = creep.room.controller.pos.findInRange(FIND_STRUCTURES, 1, {filter: s => (s.structureType === STRUCTURE_CONTAINER && s.store.getFreeCapacity(RESOURCE_ENERGY) >= creep.store[RESOURCE_ENERGY] && creep.HasCivPath(s) == true)})[0] || null;
     }
     
         
@@ -71,6 +71,7 @@ CreepRoleLoader.Work = function(creep, target)
             {
                 creep.memory.workTargetID = target.id;
                 creep.CivilianMove(target.pos, 1);
+				creep.SayMultiple(["Loaded", "Another", 'Did one']);
             }
         }
     }else
@@ -81,7 +82,7 @@ CreepRoleLoader.Work = function(creep, target)
 CreepRoleLoader.OffTarget = function(creep)
 {
     var target = Game.getObjectById(creep.memory.offTargetID);
-    if(target && ((target.energy && target.energy > 0) | (target.store && target.store[RESOURCE_ENERGY] > 0)))
+    if(target && ((target.energy && target.energy > 0) || (target.store && target.store[RESOURCE_ENERGY] > 0)))
         return target;
     
     target = null;

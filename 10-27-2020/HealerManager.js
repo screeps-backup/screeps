@@ -31,7 +31,7 @@ var HealerManager =
                         normalSpawn = Game.rooms[r].find(FIND_MY_SPAWNS, {filter: s => (!s.spawnCooldownTime)})[0] || null
                     if(normalSpawn)
                     {
-                        var healerBody = SpawnManager.SelectBody(normalSpawn.room.energyCapacityAvailable, [new CreepBody({numMove: 6, numHeal: 6}), new CreepBody({numMove: 4, numHeal: 4}), new CreepBody({numMove: 1, numHeal: 1})]);
+                        var healerBody = SpawnManager.SelectBody(normalSpawn.room.energyCapacityAvailable, [new CreepBody({numTough: 3, numMove: 10, numHeal: 7}), new CreepBody({numMove: 6, numHeal: 6}), new CreepBody({numMove: 4, numHeal: 4}), new CreepBody({numMove: 1, numHeal: 1})]);
                         if(healerBody)
                             SpawnManager.SpawnCreep(normalSpawn, 'healer', healerBody, {workTargetID: creepsToHeal[0].id});
                     }

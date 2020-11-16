@@ -11,13 +11,6 @@ var MemoryManager =
                 delete Memory.creeps[i];
             }else 
             {
-				//If you've stopped moving for 2 ticks or have an empty path for more than 1 tick
-                if((Game.creeps[i].memory.civMovingTicks && Game.creeps[i].memory.civMovingTicks - Game.time < -2) | (Game.creeps[i].memory.civMovingTicks && Game.creeps[i].memory.civMovingTicks - Game.time < -1 && (Game.creeps[i].memory.civPath && !Game.creeps[i].memory.civPath.length)))
-                {
-                    delete Game.creeps[i].memory.civMovingTicks;
-                    delete Game.creeps[i].memory.civPath;
-                    delete Game.creeps[i].memory.targetPos;
-                }
                 if(Game.creeps[i].memory.proxyTarget && Game.creeps[i].memory.proxyTarget == Game.creeps[i].room.name)
                 {
                     if(Game.creeps[i].memory.proxyTargetVar)
@@ -32,13 +25,17 @@ var MemoryManager =
 						if(Game.creeps[i].memory.lastX == Game.creeps[i].pos.x && Game.creeps[i].memory.lastY == Game.creeps[i].pos.y)
 						{
 							delete Game.creeps[i].memory._move;
-							delete Game.creeps[i].memory.civMovingTicks;
                             delete Game.creeps[i].memory.civPath;
                             delete Game.creeps[i].memory.targetPos;
+							Game.creeps[i].memory.toSet = false;
+						}else if(Game.creeps[i].memory.toSet != true && Game.creeps[i].memory.lastX && Game.creeps[i].memory.lastY)
+						{
+							Game.creeps[i].memory.toSet = true;
 						}else
 						{
 						    delete Game.creeps[i].memory.lastX;
 						    delete Game.creeps[i].memory.lastY;
+							Game.creeps[i].memory.toSet = false;
 						}
 					}
 					//if(!(Game.creeps[i].memory.lastX == Game.creeps[i].pos.x && Game.creeps[i].memory.lastY == Game.creeps[i].pos.y) && (!Game.creeps[i].memory.civPath || (Game.creeps[i].memory.civPath && !Game.creeps[i].memory.civPath.length)))

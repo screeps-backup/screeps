@@ -33,7 +33,7 @@ CreepRoleUpgrader.Work = function(creep, target)
 CreepRoleUpgrader.OffTarget = function(creep)
 {
     var target = Game.getObjectById(creep.memory.offTargetID);
-    if(target && ((target.energy && target.energy > 0) | (target.store && target.store[RESOURCE_ENERGY] >= creep.store.getFreeCapacity(RESOURCE_ENERGY))))
+    if(target && (((target.energy && target.energy > 0) | (target.store && target.store[RESOURCE_ENERGY] >= creep.store.getFreeCapacity(RESOURCE_ENERGY))) != 0))
         return target;
     
     target = null;
@@ -51,7 +51,7 @@ CreepRoleUpgrader.OffTarget = function(creep)
             target = creep.pos.findClosestByPath(FIND_SOURCES);
     }
     
-    if(!target)
+    if(!target && !creep.room.storage)
         target = creep.room.controller.pos.findInRange(FIND_STRUCTURES, 1, {filter: s => (s.structureType == STRUCTURE_CONTAINER)})[0] || null;
     
     if(target)

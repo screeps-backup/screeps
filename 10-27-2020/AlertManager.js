@@ -6,6 +6,12 @@ var AlertManager =
 {
     run: function()
     {
+		if(Game.cpu.bucket <= 3000)
+		{
+			console.log("LOW CPU: " + Game.cpu.bucket);
+			Game.notify("LOW CPU: " + Game.cpu.bucket, 5);
+		}
+		
         for(var i in Memory.outpostNames)
         {
             for(var a in Memory.outpostNames[i])
@@ -227,16 +233,6 @@ var AlertManager =
     	    {
     	        Game.notify("No storage: " + room.name, 10);
     	    }
-			
-			var barriers = room.find(FIND_STRUCTURES, {filter: s => (s.hits && (s.structureType === STRUCTURE_WALL || s.structureType === STRUCTURE_RAMPART))});
-			if(barriers.length)
-			{
-				barriers = _.sortBy(barriers, b => (b.hits));
-				Game.notify("Weakest barrier: " + Math.round(barriers[0].hits / 1000).toString() + "K", 10);
-			}else
-			{
-				Game.notify("No barriers: " + room.name, 10);
-			}
 	    }
 	},
 	OutpostReport: function(room)

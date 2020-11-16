@@ -49,7 +49,7 @@ var TowerManager =
                             {
                                 
                                 var possibleTargets = null;
-                                if(alertManager.OnAlert(r) == true | !(Game.rooms[r].storage && Game.rooms[r].storage.store[RESOURCE_ENERGY] >= 100000))
+                                if((alertManager.OnAlert(r) == true || (alertManager.OnAlert(r) != true && !(Game.rooms[r].storage && Game.rooms[r].storage.store[RESOURCE_ENERGY] >= 100000))))
                                     possibleTargets = Game.rooms[r].find(FIND_STRUCTURES, {filter: s => (s.structureType !== STRUCTURE_CONTROLLER && s.structureType !== STRUCTURE_RAMPART && s.structureType !== STRUCTURE_WALL && s.structureType !== STRUCTURE_CONTAINER && s.structureType !== STRUCTURE_ROAD && s.structureType !== STRUCTURE_LINK && s.hitsMax - s.hits >= 800)});
                                 else
                                     possibleTargets = Game.rooms[r].find(FIND_STRUCTURES, {filter: s => (s.structureType !== STRUCTURE_CONTROLLER && s.structureType !== STRUCTURE_RAMPART && s.structureType !== STRUCTURE_WALL && s.hitsMax - s.hits >= 800)});
@@ -80,8 +80,10 @@ var TowerManager =
     },
 	TargetHostile: function(towers, hostiles)
 	{
-		if(hostiles.length == 0 | towers.length == 0)
+		if(hostiles.length == 0)
 			return;
+		if(towers.length == 0)
+		    return;
 		
 		var towerDistances = [];
 		for(var h in hostiles)

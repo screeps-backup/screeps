@@ -3,6 +3,8 @@ var CreepBody = require('CreepBody');
 var SpawnManager = require('SpawnManager');
 var AlertManager = require("AlertManager");
 
+var defenderBodies = [new CreepBody({numAttack: 15, numMove: 19, numTough: 4}), new CreepBody({numAttack: 12, numMove: 16, numTough: 4}), new CreepBody({numAttack: 7, numMove: 7, numTough: 7}), new CreepBody({numAttack: 5, numMove: 5, numTough: 5}), new CreepBody({numAttack: 3, numMove: 5, numTough: 5}), new CreepBody({numAttack: 1, numMove: 1, numTough: 1})];
+
 var DefenderManager = 
 {
     run: function()
@@ -17,7 +19,7 @@ var DefenderManager =
                 if(Game.rooms[r].controller && Game.rooms[r].controller.my && Game.rooms[r].find(FIND_MY_CREEPS).filter(c => (c.memory.role == 'carrier' && c.ticksToLive > c.body.length * 3)).length)
                 {
                     this.defendersSpawnDone[r] = false;
-                    if(AlertManager.OnAlert(r) == true | Game.rooms[r].find(FIND_HOSTILE_CREEPS, {filter: c => (c.body.length > 1)}).length)
+                    if((AlertManager.OnAlert(r) == true || (AlertManager.OnAlert(r) != true && Game.rooms[r].find(FIND_HOSTILE_CREEPS, {filter: c => (c.body.length > 1)}).length)))
                     {
                         
                         var militarySpawn = Game.rooms[r].find(FIND_MY_SPAWNS, {filter: s => (s.name.startsWith("Military") && !s.spawnCooldownTime)})[0];
@@ -26,7 +28,7 @@ var DefenderManager =
                         
                         if(militarySpawn)
                         {
-                            var defenderBody = SpawnManager.SelectBody(militarySpawn.room.energyCapacityAvailable, [new CreepBody({numAttack: 12, numMove: 16, numTough: 4}), new CreepBody({numAttack: 7, numMove: 7, numTough: 7}), new CreepBody({numAttack: 5, numMove: 5, numTough: 5}), new CreepBody({numAttack: 3, numMove: 5, numTough: 5}), new CreepBody({numAttack: 1, numMove: 1, numTough: 1})]);
+                            var defenderBody = SpawnManager.SelectBody(militarySpawn.room.energyCapacityAvailable, defenderBodies);
                             
                             var targetValue = 0;
                             
@@ -66,9 +68,10 @@ var DefenderManager =
                                 SpawnManager.SpawnCreep(militarySpawn, 'defender', defenderBody);
                             }else
                             {
-                                for(var i in Game.rooms[r].find(FIND_MY_CREEPS, {filter: c => (c.memory.role == 'defender')}))
+								var defenders = Game.rooms[r].find(FIND_MY_CREEPS, {filter: c => (c.memory.role == 'defender')});
+                                for(var i in defenders)
                                 {
-                                    Game.creeps[i].memory.numDefenders = numDefenders;
+                                    defenders[i].memory.numDefenders = numDefenders;
                                 }
                                 this.defendersSpawnDone[r] = true;
                             }
@@ -88,7 +91,7 @@ var DefenderManager =
             if(Game.rooms[i].controller && Game.rooms[i].controller.my)
             {
 				//Stockpile units if there's a large player controlled unit
-                if(Game.rooms[i].find(FIND_HOSTILE_CREEPS, {filter: c => (c.owner.username != "Invader" && (c.body.length > 10 | this.BoostedCreep(c) == true) && c.pos.findInRange(FIND_STRUCTURES, 1, {filter: s => (s.structureType !== STRUCTURE_CONTAINER && s.structureType !== STRUCTURE_ROAD && s.structureType !== STRUCTURE_LINK)}).length > 0)}).length > 0)
+                if(Game.rooms[i].find(FIND_HOSTILE_CREEPS, {filter: c => (c.owner.username != "Invader" && (c.body.length > 10 || (c.body.length < 10 && this.BoostedCreep(c) == true)) != 0 && c.pos.findInRange(FIND_STRUCTURES, 1, {filter: s => (s.structureType !== STRUCTURE_CONTAINER && s.structureType !== STRUCTURE_ROAD && s.structureType !== STRUCTURE_LINK)}).length > 0)}).length > 0)
                 {
                     Memory.defendTimes[i] = Game.time;
                     Game.notify("FULL ALERT: " + i, 5);

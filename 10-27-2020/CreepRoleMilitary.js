@@ -70,7 +70,7 @@ Creep.prototype.MilitaryPathfind = function(targetPos, range, limitRoom=false)
 	
 		  roomCallback: function(roomName) {
 		      
-		    if(Memory.avoidRoomNames && Memory.avoidRoomNames.includes(roomName))
+		    if(roomName != targetPos.roomName && roomName != self.room.name && Memory.avoidRoomNames && Memory.avoidRoomNames.includes(roomName))
 			{
 			    return false;
 			}
@@ -126,12 +126,15 @@ Creep.prototype.MilitaryPathfind = function(targetPos, range, limitRoom=false)
     					if(struct.structureType !== STRUCTURE_RAMPART && struct.structureType !== STRUCTURE_ROAD && struct.structureType !== STRUCTURE_CONTAINER)
     						costs.set(struct.pos.x, struct.pos.y, 0xff);
     				});
-    				room.find(FIND_HOSTILE_CREEPS).forEach(function(c){
-    					costs.set(c.pos.x, c.pos.y, 0xff);
-    				});
-    				room.find(FIND_MY_CREEPS).forEach(function(c){
-    					costs.set(c.pos.x, c.pos.y, 16);
-    				});
+					if(room.name == self.room.name)
+					{
+						room.find(FIND_HOSTILE_CREEPS).forEach(function(c){
+							costs.set(c.pos.x, c.pos.y, 0xff);
+						});
+						room.find(FIND_MY_CREEPS).forEach(function(c){
+							costs.set(c.pos.x, c.pos.y, 16);
+						});
+					}
 			    }
 			}
 	
@@ -166,7 +169,7 @@ Creep.prototype.MilitaryMove = function(targetPos, range=1)
 	if(this.memory.inPathID && !Game.getObjectById(this.memory.inPathID))
 		delete this.memory.inPathID;
 	//Don't move if you're at the target or there's a structure blocking your path
-	if((!targetPos || (targetPos && this.pos.inRangeTo(targetPos, range))) | (this.memory.inPathID && Game.getObjectById(this.memory.inPathID) && Game.getObjectById(this.memory.inPathID).pos.inRangeTo(this.pos, 1)))		
+	if((!targetPos || (((targetPos && this.pos.inRangeTo(targetPos, range))) | (this.memory.inPathID && Game.getObjectById(this.memory.inPathID) && Game.getObjectById(this.memory.inPathID).pos.inRangeTo(this.pos, 1))) != 0))		
 		return;
 	
 	  var ret = this.MilitaryPathfind(targetPos, range, true);
@@ -179,13 +182,13 @@ Creep.prototype.MilitaryMove = function(targetPos, range=1)
 }
 Creep.prototype.MilitaryMapPathRoomNames = function(endPos)
 {
-    if(!Game.rooms[endPos.roomName] && (this.memory.militaryExitRooms === undefined | this.memory.militaryExitRooms === null))
+    if(!Game.rooms[endPos.roomName] && (this.memory.militaryExitRooms === undefined | this.memory.militaryExitRooms === null) != 0)
         return null;
     
     
     var toReturn = [];
     
-    if(Game.rooms[endRoomName] && (this.memory.militaryExitRooms === undefined | this.memory.militaryExitRooms === null))
+    if(Game.rooms[endRoomName] && (this.memory.militaryExitRooms === undefined | this.memory.militaryExitRooms === null) != 0)
     {
         var ret = this.MilitaryPathfind(endPos, 1);
         for(var i in ret.path)
@@ -221,7 +224,7 @@ Creep.prototype.MilitaryExitMove = function(targetPos)
 	
 	var moveDir = this.memory.proxyExit;
 	
-	if(this.memory.proxyExit == undefined | this.memory.militaryExitPos == undefined)
+	if((this.memory.proxyExit == undefined | this.memory.militaryExitPos == undefined) != 0)
 	{
 		if(!this.memory.finalMilitaryPos || (this.memory.finalMilitaryPos && this.room.name != this.memory.finalMilitaryPos.roomName))
 		{

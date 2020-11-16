@@ -16,7 +16,7 @@ var ReserveManager =
                 {
                     for(var o in Memory.outpostNames[r])
                     {
-						var reserverBody = SpawnManager.SelectBody(Game.rooms[r].energyCapacityAvailable, [new CreepBody({numClaim: 2, numMove: 4}), new CreepBody({numClaim: 2, numMove: 2})]);
+						var reserverBody = SpawnManager.SelectBody(Game.rooms[r].energyCapacityAvailable, [new CreepBody({numClaim: 3, numMove: 6}), new CreepBody({numClaim: 2, numMove: 4}), new CreepBody({numClaim: 2, numMove: 2})]);
 						
 						var claimNum = 0;
 						for(var i in reserverBody)

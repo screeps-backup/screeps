@@ -5,7 +5,10 @@ CreepRoleProxyBuilder.run = function(creep)
 {
     if(creep.RunAway() == true)
         return;
-    
+ 
+	if(creep.memory.proxyTarget)
+		creep.say(creep.memory.proxyTarget);
+ 
     var working = creep.memory.isWorking === true;
     var isWorking = this.IsWorking(creep);
     if(working != isWorking)
@@ -15,7 +18,7 @@ CreepRoleProxyBuilder.run = function(creep)
     else
         creepRoleBuilder.run.call(this, creep);
         
-    if(creep.room.name != creep.memory.spawnRoom && (creep.pos.x == 0 | creep.pos.x == 49 | creep.pos.y == 0 | creep.pos.y == 49))
+    if((creep.pos.x == 0 | creep.pos.x == 49 | creep.pos.y == 0 | creep.pos.y == 49) != 0)
         creep.AvoidEdges();
 }
 CreepRoleProxyBuilder.WorkTarget = function(creep)
@@ -97,10 +100,10 @@ CreepRoleProxyBuilder.WorkTarget = function(creep)
 CreepRoleProxyBuilder.OffTarget = function(creep)
 {
     var target = Game.getObjectById(creep.memory.offTargetID);
-    if(target && target.room.name == creep.room.name && ((target.store && target.store[RESOURCE_ENERGY] >= creep.store.getFreeCapacity(RESOURCE_ENERGY)) | (target.energy && target.energy > 0)))
+    if(target && target.room.name == creep.room.name && ((target.store && target.store[RESOURCE_ENERGY] >= creep.store.getFreeCapacity(RESOURCE_ENERGY)) || (target.energy && target.energy > 0)) && creep.HasCivPath(target) == true)
         return target;
     
-    target = creep.pos.findClosestByRange(FIND_STRUCTURES, {filter: s => (((s.structureType === STRUCTURE_CONTAINER && !s.pos.findInRange(FIND_STRUCTURES, 1, {filter: a => a.structureType === STRUCTURE_CONTROLLER}).length) || s.structureType === STRUCTURE_STORAGE) && s.store[RESOURCE_ENERGY] >= creep.store.getFreeCapacity(RESOURCE_ENERGY))});
+    target = creep.pos.findClosestByRange(FIND_STRUCTURES, {filter: s => (((s.structureType === STRUCTURE_CONTAINER && !s.pos.findInRange(FIND_STRUCTURES, 1, {filter: a => a.structureType === STRUCTURE_CONTROLLER}).length) || s.structureType === STRUCTURE_STORAGE) && s.store[RESOURCE_ENERGY] >= creep.store.getFreeCapacity(RESOURCE_ENERGY) && creep.HasCivPath(s) == true)});
     
     if(target)
     {

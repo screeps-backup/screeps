@@ -38,6 +38,9 @@ CreepRoleDefender.Work = function(creep, target)
     {
         creep.MilitaryMove(target.pos, 1);
     }
+	
+	if(target.owner)
+		creep.SayMultiple(['ATTACK', 'DIE', target.owner.username, 'GO HOME']);
 }
 CreepRoleDefender.OffTarget = function(creep)
 {
@@ -49,6 +52,7 @@ CreepRoleDefender.OffTarget = function(creep)
 CreepRoleDefender.OffWork = function(creep, target)
 {
 	creep.CivilianMove(target.pos, 1);
+	creep.SayMultiple(['Regroup!', 'Squad up', 'Fall back']);
 }
 
 

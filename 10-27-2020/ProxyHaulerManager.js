@@ -5,7 +5,8 @@ var defenderManager = require('DefenderManager');
 var proxyDefenderManager = require("ProxyDefenderManager");
 var baseBasherManager = require("BaseBasherManager");
 
-var proxyCarrierBodies = [new CreepBody({numCarry: 24, numMove: 12}), new CreepBody({numCarry: 16, numMove: 8}), new CreepBody({numCarry: 10, numMove: 5})];
+//Don't add more. That's the max creep size.
+var proxyCarrierBodies = [new CreepBody({numCarry: 32, numMove: 16}), new CreepBody({numCarry: 30, numMove: 15}), new CreepBody({numCarry: 24, numMove: 12}), new CreepBody({numCarry: 16, numMove: 8})];
 
 var ProxyHaulerManager = 
 {
