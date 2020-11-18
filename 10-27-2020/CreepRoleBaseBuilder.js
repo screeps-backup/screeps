@@ -16,5 +16,20 @@ CreepRoleBaseBuilder.run = function(creep)
 	else
 		creepRoleUpgrader.run(creep);
 }
+CreepRoleBaseBuilder.WorkTarget = function(creep)
+{
+	var spawnBuildSites = creep.room.find(FIND_MY_CONSTRUCTION_SITES, {filter: c => (c.structureType === STRUCTURE_SPAWN)});
+	if(spawnBuildSites.length)
+	{
+		var target = creep.pos.findClosestByRange(spawnBuildSites);
+		if(creep.pos.inRangeTo(target, 3))
+			creep.build(target);
+		else
+			creep.CivilianMove(target.pos, 3);
+		return null;
+	}
+	
+	return creepRoleBuilder.WorkTarget.call(this, creep);
+}
 
 module.exports = CreepRoleBaseBuilder;

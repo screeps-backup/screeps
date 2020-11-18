@@ -29,6 +29,7 @@ var pixelManager = require("PixelManager");
 var avoidRoomsManager = require("AvoidRoomsManager");
 var claimManager = require("ClaimManager");
 var moverManager = require("MoverManager");
+var boostManager = require("BoostManager");
 
 var creepRole = require("CreepRole");
 
@@ -184,6 +185,7 @@ module.exports.loop = function ()
 	avoidRoomsManager.run();
 	claimManager.run();
 	moverManager.run();
+	boostManager.run();
 	
     for(var name in Game.creeps)
         RunCreep(Game.creeps[name]);

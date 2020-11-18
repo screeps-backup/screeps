@@ -83,7 +83,7 @@ CreepRoleHealer.Work = function(creep, target)
 }
 CreepRoleHealer.OffTarget = function(creep)
 {
-	var creepsToHeal = creep.room.find(FIND_MY_CREEPS, {filter: c => (c.memory.role == 'baseBasher' && !spawnManager.GlobalCreeps().filter(cB => (cB.memory.role == 'healer' && cB.memory.workTargetID == c.id)).length)});
+	var creepsToHeal = creep.room.find(FIND_MY_CREEPS, {filter: c => (c.memory.role == 'baseBasher' && (!c.memory.healerID || (c.memory.healerID && (!Game.getObjectById(c.memory.healerID) || (Game.getObjectById(c.memory.healerID) && Game.getObjectById(c.memory.healerID).workTargetID != c.id)) )))});
 	if(creepsToHeal.length)
 	{
 		creep.memory.workTargetID = creepsToHeal[0].id;
@@ -91,7 +91,33 @@ CreepRoleHealer.OffTarget = function(creep)
 		return creepsToHeal[0];
 	}
 	
-	creep.heal(creep);
+	//The show must go on: Just guess who will need heals.
+	var moveTarget = creep.pos.findClosestByRange(FIND_MY_CREEPS, {filter: c => (c.memory.role == 'baseBasher')});
+	if(moveTarget)
+		creep.MilitaryMove(creep.findClosestByRange(target.pos, 1), 1);
+	
+	if(creep.hits < creep.hitsMax)
+	{
+		creep.heal(creep);
+	}else
+	{
+		var meleeHealTargets = creep.pos.findInRange(FIND_MY_CREEPS, 1);
+		meleeHealTargets = _.sortBy(meleeHealTargets, t => -(t.hitsMax - t.hits));
+		
+		if(meleeHealTargets.length && meleeHealTargets[0].hits < meleeHealTargets[0].hitsMax)
+		{
+			creep.heal(meleeHealTargets[0]);
+		}else
+		{
+			var rangedHealTargets = creep.pos.findInRange(FIND_MY_CREEPS, 3);
+			rangedHealTargets = _.sortBy(rangedHealTargets, t => -(t.hitsMax - t.hits));
+			if(rangedHealTargets.length && rangedHealTargets[0].hits < rangedHealTargets[0].hitsMax)
+				creep.rangedHeal(rangedHealTargets[0]);
+			else //Another guess
+				creep.heal(creep);
+		}
+	}
+	
 	return null;
 }
 CreepRoleHealer.OffWork = function(creep, target)

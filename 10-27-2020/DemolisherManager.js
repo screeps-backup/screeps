@@ -34,7 +34,7 @@ var DemolisherManager =
                         {
                             var demolisherBody = SpawnManager.SelectBody(normalSpawn.room.energyCapacityAvailable, attackDemolisherBodies);
                             if(demolisherBody)
-                                SpawnManager.SpawnCreep(normalSpawn, 'demolisher', demolisherBody, {proxyTarget: Memory.militaryFlagNames['attackDemolish'][i]});
+                                SpawnManager.SpawnCreep(normalSpawn, 'demolisher', demolisherBody, {proxyTarget: Memory.militaryFlagNames['attackDemolish'][i], attack: true});
                         }
                     }
                 }

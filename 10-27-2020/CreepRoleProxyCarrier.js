@@ -11,6 +11,8 @@ CreepRoleProxyCarrier.run = function(creep)
         
         creep.ResetMemory();
     }
+	var working = creep.memory.isWorking === true;
+    var isWorking = this.IsWorking(creep);
     if(creep.RunAway() == true)
     {
         return;
@@ -19,8 +21,6 @@ CreepRoleProxyCarrier.run = function(creep)
 	if(creep.memory.proxyTarget)
 		creep.say(creep.memory.proxyTarget);
     
-    var working = creep.memory.isWorking === true;
-    var isWorking = this.IsWorking(creep);
     if(working != isWorking)
     {
         creep.ResetMemory();
@@ -35,7 +35,7 @@ CreepRoleProxyCarrier.run = function(creep)
 }
 CreepRoleProxyCarrier.OffWork = function(creep, target)
 {
-    if(target && creep.room.name != target.room.name)
+    if(target && creep.room.name != target.room.name && (!creep.memory.proxyTarget || (creep.memory.proxyTarget && creep.memory.proxyTarget == creep.memory.spawnRoom)))
     {
         creep.memory.proxyTarget = target.room.name;
         return;
@@ -45,7 +45,7 @@ CreepRoleProxyCarrier.OffWork = function(creep, target)
 CreepRoleProxyCarrier.OffTarget = function(creep)
 {
     var target = Game.getObjectById(creep.memory.offTargetID);
-    if(target && Game.rooms[target.pos.roomName] && (target.store &&  target.store[RESOURCE_ENERGY] > 0) && creep.HasCivPath(target) == true)
+    if(target && Game.rooms[target.pos.roomName] && ((target.store &&  target.store[RESOURCE_ENERGY] > 0) || (target.amount && target.amount > 0)) && creep.HasCivPath(target) == true)
         return target;
     
     target = null;
@@ -169,13 +169,7 @@ CreepRoleProxyCarrier.OffTarget = function(creep)
     return null;
 }
 CreepRoleProxyCarrier.Work = function(creep, target)
-{
-    if(creep.room.name != target.room.name)
-    {
-        creep.memory.proxyTarget = target.room.name;
-        return;
-    }
-    
+{   
     if(creep.pos.inRangeTo(target, 1))
     {
         creep.transfer(target, RESOURCE_ENERGY);

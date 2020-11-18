@@ -14,7 +14,7 @@ var ProxyBuilderManager =
         {
             for(var r in Game.rooms)
             {
-                if(Game.rooms[r].controller && Game.rooms[r].controller.my && Game.rooms[r].controller.level >= 4 && SpawnManager.normalSpawnDone[r] == true && defenderManager.SpawnDone(r) == true)
+                if(Game.rooms[r].controller && Game.rooms[r].controller.my && Game.rooms[r].controller.level >= 4 && Memory.outpostNames && Memory.outpostNames[r] && Memory.outpostNames[r].length && SpawnManager.normalSpawnDone[r] == true && defenderManager.SpawnDone(r) == true)
                 {
                     var normalSpawn = Game.rooms[r].find(FIND_MY_SPAWNS, {filter: s => (s.name.startsWith("Spawn") && !s.spawnCooldownTime)})[0];
                     if(normalSpawn)

@@ -25,18 +25,18 @@ var ScoutManager =
         {
             SpawnManager.SpawnScout(Game.flags['MilitarySpawn'].pos.roomName, Game.flags['BaseBash'].pos.roomName);
         }
+		for(var r in Game.rooms)
+		{
+			if(Game.rooms[r].controller && Game.rooms[r].controller.my && SpawnManager.normalSpawnDone[r] == true && defenderManager.SpawnDone(r) == true)
+			{
+				for(var o in Memory.outpostNames[r])
+				{
+					SpawnManager.SpawnScout(r, Memory.outpostNames[r][o]);
+				}
+			}
+		}
         if(Game.time % 10 == 0)
         {
-            for(var r in Game.rooms)
-            {
-                if(Game.rooms[r].controller && Game.rooms[r].controller.my && SpawnManager.normalSpawnDone[r] == true && defenderManager.SpawnDone(r) == true)
-                {
-                    for(var o in Memory.outpostNames[r])
-                    {
-                        SpawnManager.SpawnScout(r, Memory.outpostNames[r][o]);
-                    }
-                }
-            }
             if(Game.flags['MilitarySpawn'] && Game.flags['DeployScout'])
             {
                 SpawnManager.SpawnScout(Game.flags['MilitarySpawn'].pos.roomName, Game.flags['DeployScout'].pos.roomName);

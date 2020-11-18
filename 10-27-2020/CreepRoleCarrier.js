@@ -22,30 +22,31 @@ CreepRoleCarrier.IsWorking = function(creep)
 CreepRoleCarrier.WorkTarget = function(creep)
 {
     var target = Game.getObjectById(creep.memory.workTargetID);
-    if(target && ((target.energy && target.energy < target.energyCapacity - 10) || (target.store && _.sum(target.store) < target.storeCapacity)) && creep.HasCivPath(target) == true)
+	var targetFull = !target || (target && ((target.energy && target.energy == target.energyCapacity) || (target.store && target.store.getFreeCapacity() == 0)));
+    if(target && targetFull != true && creep.HasCivPath(target) == true)
         return target;
     
 	delete creep.memory.workTargetID;
     target = null;
     
     if(!creep.room.find(FIND_MY_CREEPS, {filter: c => (c.memory.role === 'loader')}).length)
-        target = creep.pos.findClosestByRange(FIND_MY_STRUCTURES, {filter: s => (((s.structureType === STRUCTURE_EXTENSION && s.energy < s.energyCapacity) || (s.structureType === STRUCTURE_SPAWN && s.store[RESOURCE_ENERGY] < s.store.getCapacity(RESOURCE_ENERGY))) && creep.HasCivPath(s) == true)});
+        target = creep.pos.findClosestByRange(FIND_MY_STRUCTURES, {filter: s => (((s.structureType === STRUCTURE_EXTENSION && s.energy < s.energyCapacity) || (s.structureType === STRUCTURE_SPAWN && s.store[RESOURCE_ENERGY] < s.store.getCapacity(RESOURCE_ENERGY))) && (targetFull == true || (targetFull != true && creep.HasCivPath(s) == true)))});
     
     if(!target)
-        target = creep.pos.findClosestByRange(FIND_MY_STRUCTURES, {filter: s => (s.structureType == STRUCTURE_TOWER && s.store.getFreeCapacity(RESOURCE_ENERGY) >= creep.store[RESOURCE_ENERGY] && creep.HasCivPath(s) == true)});
+        target = creep.pos.findClosestByRange(FIND_MY_STRUCTURES, {filter: s => (s.structureType == STRUCTURE_TOWER && s.store.getFreeCapacity(RESOURCE_ENERGY) >= creep.store[RESOURCE_ENERGY] && (targetFull == true || (targetFull != true && creep.HasCivPath(s) == true)))});
     
 	if(!target)
 	{
 		var loaderLink = linkManager.LoaderLink(creep.room);
-		if(loaderLink && loaderLink.store.getFreeCapacity(RESOURCE_ENERGY) > 0 && creep.HasCivPath(loaderLink) == true)
+		if(loaderLink && loaderLink.store.getFreeCapacity(RESOURCE_ENERGY) > 0 && (targetFull == true || (targetFull != true && creep.HasCivPath(loaderLink) == true)))
 			target = loaderLink;
 	}
     	
 	if(!target)
-		target = creep.pos.findClosestByRange(FIND_STRUCTURES, {filter: s => (s.structureType === STRUCTURE_CONTAINER && s.pos.findInRange(FIND_STRUCTURES, 1, {filter: a => (a.structureType === STRUCTURE_CONTROLLER)}).length > 0 && s.store.getFreeCapacity(RESOURCE_ENERGY) >= creep.store[RESOURCE_ENERGY] && creep.HasCivPath(s) == true)});
+		target = creep.pos.findClosestByRange(FIND_STRUCTURES, {filter: s => (s.structureType === STRUCTURE_CONTAINER && s.pos.findInRange(FIND_STRUCTURES, 1, {filter: a => (a.structureType === STRUCTURE_CONTROLLER)}).length > 0 && s.store.getFreeCapacity(RESOURCE_ENERGY) >= creep.store[RESOURCE_ENERGY] && (targetFull == true || (targetFull != true && creep.HasCivPath(s) == true)))});
     
     if(!target)
-        target = creep.pos.findClosestByRange(FIND_STRUCTURES, {filter: s => ((((s.structureType === STRUCTURE_CONTAINER && !s.pos.findInRange(FIND_SOURCES, 1).length) || s.structureType === STRUCTURE_STORAGE) && s.store.getFreeCapacity(RESOURCE_ENERGY) >= creep.store[RESOURCE_ENERGY]) && creep.HasCivPath(s) == true)});
+        target = creep.pos.findClosestByRange(FIND_STRUCTURES, {filter: s => ((((s.structureType === STRUCTURE_CONTAINER && !s.pos.findInRange(FIND_SOURCES, 1).length) || s.structureType === STRUCTURE_STORAGE) && s.store.getFreeCapacity(RESOURCE_ENERGY) >= creep.store[RESOURCE_ENERGY]) && (targetFull == true || (targetFull != true && creep.HasCivPath(s) == true)))});
     
         
     if(target)
@@ -78,7 +79,8 @@ CreepRoleCarrier.Work = function(creep, target)
 CreepRoleCarrier.OffTarget = function(creep)
 {
     var target = Game.getObjectById(creep.memory.offTargetID);
-    if(target && ((target.energy && target.energy > 0) || (target.store && target.store[RESOURCE_ENERGY] >= creep.store.getFreeCapacity(RESOURCE_ENERGY))) && creep.HasCivPath(target) == true)
+	var targetEmpty = !target || (target && (((target.energy && target.energy > 0) || (target.store && target.store[RESOURCE_ENERGY] > 0) || (target.amount && target.amount > 0)) == false));
+    if(target && targetEmpty == false && creep.HasCivPath(target) == true)
         return target;
     
 	delete creep.memory.offTargetID;
@@ -86,7 +88,7 @@ CreepRoleCarrier.OffTarget = function(creep)
 	
 	if(creep.room.find(FIND_HOSTILE_CREEPS, {filter: c => (c.body.length > 1)}).length == 0)
 	{
-    	var tombstones = creep.room.find(FIND_TOMBSTONES, {filter: t => (t.store[RESOURCE_ENERGY] >= creep.store.getFreeCapacity(RESOURCE_ENERGY) / 2 && !creep.OtherCreepsOnOffTarget(t.id) && creep.HasCivPath(t) == true)});
+    	var tombstones = creep.room.find(FIND_TOMBSTONES, {filter: t => (t.store[RESOURCE_ENERGY] >= creep.store.getFreeCapacity(RESOURCE_ENERGY) / 2 && !creep.OtherCreepsOnOffTarget(t.id) && (targetEmpty == true || (targetEmpty != true && creep.HasCivPath(t) == true)))});
     	if(tombstones.length)
     	{
     		tombstones = _.sortBy(tombstones, t => -(t.store[RESOURCE_ENERGY]));
@@ -95,7 +97,7 @@ CreepRoleCarrier.OffTarget = function(creep)
     	
     	if(!target)
     	{
-    		var dropped = creep.room.find(FIND_DROPPED_RESOURCES, {filter: t => (t.resourceType === RESOURCE_ENERGY && t.amount >= creep.store.getFreeCapacity(RESOURCE_ENERGY) / 2 && !creep.OtherCreepsOnOffTarget(t.id) && creep.HasCivPath(t) == true)});
+    		var dropped = creep.room.find(FIND_DROPPED_RESOURCES, {filter: t => (t.resourceType === RESOURCE_ENERGY && t.amount >= creep.store.getFreeCapacity(RESOURCE_ENERGY) / 2 && !creep.OtherCreepsOnOffTarget(t.id) && (targetEmpty == true || (targetEmpty != true && creep.HasCivPath(t) == true)))});
     		if(dropped.length)
     		{
     			dropped = _.sortBy(dropped, t => -(t.amount));
@@ -106,26 +108,26 @@ CreepRoleCarrier.OffTarget = function(creep)
     
 	if(!target)
 	{
-		var mineContainers = creep.room.find(FIND_STRUCTURES, {filter: s => (s.structureType === STRUCTURE_CONTAINER && s.store[RESOURCE_ENERGY] >= creep.store.getFreeCapacity(RESOURCE_ENERGY) && s.pos.findInRange(FIND_SOURCES, 1).length && creep.HasCivPath(s) == true)});
+		var mineContainers = creep.room.find(FIND_STRUCTURES, {filter: s => (s.structureType === STRUCTURE_CONTAINER && s.store[RESOURCE_ENERGY] >= creep.store.getFreeCapacity(RESOURCE_ENERGY) && s.pos.findInRange(FIND_SOURCES, 1).length && (targetEmpty == true || (targetEmpty != true && creep.HasCivPath(s) == true)))});
 		mineContainers = _.sortBy(mineContainers, m => m.store[RESOURCE_ENERGY]);
 		if(mineContainers.length)
 			target = mineContainers[mineContainers.length - 1];
 	}
     
 	if(!target)
-		target = creep.pos.findClosestByRange(FIND_RUINS, {filter: r => (r.store[RESOURCE_ENERGY] > 0 && creep.HasCivPath(r))});
+		target = creep.pos.findClosestByRange(FIND_RUINS, {filter: r => (r.store[RESOURCE_ENERGY] > 0 && (targetEmpty == true || (targetEmpty != true && creep.HasCivPath(r) == true)))});
 	
     if(!target)
-        target = creep.pos.findClosestByRange(FIND_STRUCTURES, {filter: s => ( s.structureType === STRUCTURE_CONTAINER && s.pos.findInRange(FIND_STRUCTURES, 1, {filter: a => (a.structureType === STRUCTURE_CONTROLLER)}).length == 0 && s.store[RESOURCE_ENERGY] >= creep.store.getFreeCapacity(RESOURCE_ENERGY) && creep.HasCivPath(s) == true)});
+        target = creep.pos.findClosestByRange(FIND_STRUCTURES, {filter: s => ( s.structureType === STRUCTURE_CONTAINER && s.pos.findInRange(FIND_STRUCTURES, 1, {filter: a => (a.structureType === STRUCTURE_CONTROLLER)}).length == 0 && s.store[RESOURCE_ENERGY] >= creep.store.getFreeCapacity(RESOURCE_ENERGY) && (targetEmpty == true || (targetEmpty != true && creep.HasCivPath(s) == true)))});
         
     if(!target)
     {
-        if(creep.room.storage && creep.room.storage.store[RESOURCE_ENERGY] >= 200000 && creep.HasCivPath(creep.room.storage) == true)
+        if(creep.room.storage && creep.room.storage.store[RESOURCE_ENERGY] >= 200000 && (targetEmpty == true || (targetEmpty != true && creep.HasCivPath(creep.room.storage) == true)))
             target = creep.room.storage;
     }
     
     if(!target)
-        target = creep.pos.findClosestByRange(FIND_STRUCTURES, {filter: s => ( s.structureType === STRUCTURE_CONTAINER && s.pos.findInRange(FIND_STRUCTURES, 1, {filter: a => (a.structureType === STRUCTURE_CONTROLLER)}).length == 0 && s.store[RESOURCE_ENERGY] > 0 && creep.HasCivPath(s) == true)});
+        target = creep.pos.findClosestByRange(FIND_STRUCTURES, {filter: s => ( s.structureType === STRUCTURE_CONTAINER && s.pos.findInRange(FIND_STRUCTURES, 1, {filter: a => (a.structureType === STRUCTURE_CONTROLLER)}).length == 0 && s.store[RESOURCE_ENERGY] > 0 && (targetEmpty == true || (targetEmpty != true && creep.HasCivPath(s) == true)))});
     
     if(target)
     {

@@ -222,7 +222,7 @@ var AlertManager =
     	    {
     	        if(this.previousStorageEnergy)
     	        {
-    	            Game.notify("Storage energy profit (" + room.name + "): " + (room.storage.store[RESOURCE_ENERGY] - this.previousStorageEnergy), 10);
+    	            Game.notify("Storage energy (" + room.name + "): " + this.previousStorageEnergy + " + " + (room.storage.store[RESOURCE_ENERGY] - this.previousStorageEnergy), 10);
     	            this.previousStorageEnergy = room.storage.store[RESOURCE_ENERGY];
     	        }else
     	        {

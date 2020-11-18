@@ -7,7 +7,7 @@ var defenderManager = require('DefenderManager');
 const maxBaseBashRemove = 9000;
 var baseBashCountdown = maxBaseBashRemove;
 
-var baseBasherBodies = [new CreepBody({numTough: 2, numMove: 17, numWork: 10, numAttack: 5}), new CreepBody({numTough: 4, numMove: 15, numWork: 6, numAttack: 5})];
+var baseBasherBodies = [new CreepBody({numTough: 7, numMove: 20, numWork: 8, numAttack: 5}), new CreepBody({numTough: 4, numMove: 15, numWork: 6, numAttack: 5})];
 
 var BaseBasherManager = 
 {
@@ -39,7 +39,7 @@ var BaseBasherManager =
                     if(spawn)
                     {
                         
-						var baseBashers = spawnManager.GlobalCreepsByRole('baseBasher').filter(c => (c.memory.garrisonRoom == null && c.memory.spawnRoom == spawn.room.name));
+						var baseBashers = spawnManager.GlobalCreepsByRole('baseBasher').filter(c => (c.memory.garrisonTarget === null && c.memory.spawnRoom == spawn.room.name));
 						if(baseBashers.length)
 						    baseBashers = _.sortBy(baseBashers, b => (b.ticksToLive)); 
                         if((!baseBashers.length && !spawn.room.find(FIND_MY_CREEPS, {filter: c => (c.memory.role == 'baseBasher')}).length) || (baseBashers.length && baseBashers[0].ticksToLive > 1000))
@@ -51,13 +51,13 @@ var BaseBasherManager =
 								spawnManager.SpawnCreep(spawn, 'baseBasher', baseBasherBody, {waitForHealer: true, garrisoned: false, numGarrison: 1000, garrisonTarget: null});
 						}else
 						{
-						    var all = spawnManager.GlobalCreeps().filter(c => (c.memory.role == 'baseBasher' && c.memory.spawnRoom == spawn.room.name && c.memory.garrisonTarget == undefined));
-						    
-						    if(spawnManager.GlobalCreeps().filter(c => (c.memory.role == 'healer' && c.memory.spawnRoom == spawn.room.name)).length >= all.length)
+						    var all = spawnManager.GlobalCreeps().filter(c => (c.memory.role == 'baseBasher' && c.memory.spawnRoom == spawn.room.name && c.memory.garrisonTarget === null));
+						    var allHaveHealers = all.filter(c => (c.memory.healerID && Game.getObjectById(c.memory.healerID) && Game.getObjectById(c.memory.healerID).memory.workTargetID == c.id && c.room == Game.getObjectById(c.memory.healerID).room)).length == all.length;
+						    if(allHaveHealers == true)
 						    {
     						    for(var i in all)
     						    {
-    						        all[i].memory.numGarrison = baseBashers.length;
+    						        all[i].memory.numGarrison = all.length;
     						        all[i].memory.garrisonTarget = Memory.militaryFlagNames['baseBash'][i];
     						    }
     						    this.spawnDone[r] = true;

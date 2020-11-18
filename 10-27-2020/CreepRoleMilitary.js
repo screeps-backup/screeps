@@ -39,10 +39,10 @@ Creep.prototype.AllignWithHealer = function()
 	if(this.memory.waitForHealer !== true)
 		return false;
 	
-	var assignedHealers = SpawnManager.GlobalCreeps().filter(c => (c.memory.role == 'healer' && c.memory.workTargetID == this.id));
-	if(assignedHealers.length && this.room.name != this.memory.spawnRoom && assignedHealers[0].room == this.room && !this.pos.inRangeTo(assignedHealers[0].pos, 1))
+	var assignedHealer = Game.getObjectById(this.memory.healerID) || null;
+	if(assignedHealer && this.room.name != this.memory.spawnRoom && assignedHealer.room == this.room && !this.pos.inRangeTo(assignedHealer, 1))
 		return true;
-	if(!assignedHealers.length && this.room.name == this.memory.spawnRoom)
+	if(!assignedHealer && this.room.name == this.memory.spawnRoom)
 	    return true;
 	
 	return false;
@@ -143,16 +143,6 @@ Creep.prototype.MilitaryPathfind = function(targetPos, range, limitRoom=false)
 		}
 	  );
 	  
-	  if(ret.path.length)
-	  {
-		  if(numWork > 0)
-		  {
-			var blockingPath = ret.path[0].findInRange(FIND_STRUCTURES, 0, {filter: s => (s.structureType !== STRUCTURE_CONTAINER && (s.structureType !== STRUCTURE_RAMPART || !s.my))}); 
-			if(blockingPath.length && (!this.memory.inPathID || (this.memory.inPathID && !Game.getObjectById(this.memory.inPathID))))
-				this.memory.inPathID = blockingPath[0].id
-		  }
-	  }
-	  
 	  return ret;
 }
 //Very CPU intensive ATM. Use with caution.
@@ -166,10 +156,8 @@ Creep.prototype.MilitaryMove = function(targetPos, range=1)
 	if(this.memory.proxyTarget && this.room.name != this.memory.proxyTarget && this.room.find(FIND_HOSTILE_CREEPS, {filter: c => (c.owner.username == 'Source Keepr')}).length > 0)
 	    this.CivilianMove(targetPos);
 	
-	if(this.memory.inPathID && !Game.getObjectById(this.memory.inPathID))
-		delete this.memory.inPathID;
 	//Don't move if you're at the target or there's a structure blocking your path
-	if((!targetPos || (((targetPos && this.pos.inRangeTo(targetPos, range))) | (this.memory.inPathID && Game.getObjectById(this.memory.inPathID) && Game.getObjectById(this.memory.inPathID).pos.inRangeTo(this.pos, 1))) != 0))		
+	if((!targetPos || (((targetPos && this.pos.inRangeTo(targetPos, range))))))		
 		return;
 	
 	  var ret = this.MilitaryPathfind(targetPos, range, true);
@@ -287,7 +275,8 @@ Creep.prototype.Garrison = function(targetAllies, endProxyTarget)
 		return false;
 	}
 	
-	if(SpawnManager.GlobalCreeps().filter(c => (c.memory.role == 'healer' && c.memory.workTargetID == this.id && c.room.name != this.room.name)).length > 0)
+	var assignedHealer = Game.getObjectById(this.memory.healerID) || null;
+	if(assignedHealer && assignedHealer.memory.workTargetID == this.id && assignedHealer.room != this.room)
 	{
 		this.AvoidEdges();
 		return false;
@@ -335,6 +324,8 @@ var CreepRoleMilitary = Object.create(creepRole);
 //There's no need to check if your store is full since military units don't have one
 CreepRoleMilitary.run = function(creep)
 {
+	if(((creep.pos.x == 0 || creep.pos.x == 49) | (creep.pos.y == 0 | creep.pos.y == 49)) != 0)
+		creep.AvoidEdges();
 	if(creep.memory.garrisoned === false)
 		creep.Garrison(creep.memory.numGarrison, creep.memory.garrisonTarget);
 	var workTarget = this.WorkTarget(creep);

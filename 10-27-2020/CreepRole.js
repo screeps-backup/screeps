@@ -113,6 +113,7 @@ Creep.prototype.GetExitPos = function(exitDir)
 			return null;
 	}
 }
+const maxCivSearchRooms = 16;
 Creep.prototype.ProxyMoveDir = function(proxyTarget)
 {
 	if((this.pos.x === 0 | this.pos.x === 49 | this.pos.y === 0 | this.pos.y === 49) != 0)
@@ -126,22 +127,37 @@ Creep.prototype.ProxyMoveDir = function(proxyTarget)
 	//if(!this.memory.proxyExit)
 	//{
 		//delete the proxy exit to reset the target
-	if(Memory.avoidRoomNames.includes(proxyTarget) == false && avoidRoomsManager.civAvoidRooms[proxyTarget] != true)
+	if(this.memory.mapCountdown && this.memory.mapCountdown > 0)
 	{
-		var startRoom = this.room.name;
-		const route = Game.map.findRoute(this.room.name, proxyTarget, {
-		routeCallback(roomName, fromRoomName) {
-			if(roomName != startRoom && (avoidRoomsManager.civAvoidRooms[roomName] == true || (avoidRoomsManager.civAvoidRooms[roomName] != true && Memory.avoidRoomNames.includes(roomName)))) {    // avoid this room
-				return Infinity;
-			}
-			return 1;
-		}});
-		if(route.length)
+		console.log(proxyTarget);
+		this.memory.mapCountdown--;
+	}else
+	{
+		if(Memory.avoidRoomNames.includes(proxyTarget) == false && avoidRoomsManager.civAvoidRooms[proxyTarget] != true)
 		{
-			this.memory.proxyExit = route[0].exit;
+			var startRoom = this.room.name;
+			var tryCount = 0;
+			const route = Game.map.findRoute(this.room.name, proxyTarget, {
+			routeCallback(roomName, fromRoomName) {
+				tryCount++;
+				if(tryCount > maxCivSearchRooms)
+					return 1;
+				
+				if(roomName != startRoom && roomName != proxyTarget && (avoidRoomsManager.civAvoidRooms[roomName] == true || (avoidRoomsManager.civAvoidRooms[roomName] != true && Memory.avoidRoomNames.includes(roomName)))) {    // avoid this room
+					return maxCivSearchRooms + 1;
+				}
+				return 1;
+			}});
+			
+			if(route.length)
+			{
+				if(tryCount <= maxCivSearchRooms)
+					this.memory.proxyExit = route[0].exit;
+				else
+					this.memory.mapCountdown = 10;
+			}
 		}
 	}
-	//}
 	
 	return this.memory.proxyExit || null;
 }
@@ -306,8 +322,6 @@ Creep.prototype.CivilianMove = function(targetPos, range=0, maxSaveMoves=5)
     					{
     						if(myCreeps[i].AtLastPos() == true)
     							costMatrix.set(myCreeps[i].pos.x, myCreeps[i].pos.y, 0xff);
-    						else
-    							costMatrix.set(myCreeps[i].pos.x, myCreeps[i].pos.y, 1);
     					}
     				}
     				
@@ -504,11 +518,92 @@ Creep.prototype.RunAway = function()
 	return false;
 }
 
+Creep.prototype.CanMoveTo = function(singleTarget)
+{
+	var self = this;
+	path = PathFinder.search(self.pos, {pos: singleTarget, range: 1}, {
+			ignoreCreeps: true, 
+			maxRooms: 1, 
+			plainCost: 1,
+			swampCost: 1,
+			roomCallback: function(roomName) {
+			var costMatrix = new PathFinder.CostMatrix;
+			if(Game.rooms[roomName])
+			{
+				Game.rooms[roomName].find(FIND_STRUCTURES).forEach(function(struct) {
+				  if (struct.structureType !== STRUCTURE_ROAD && struct.structureType !== STRUCTURE_CONTAINER &&
+							 (struct.structureType !== STRUCTURE_RAMPART ||
+							  !struct.my)) {
+					// Can't walk through non-walkable buildings
+					costMatrix.set(struct.pos.x, struct.pos.y, 0xff);
+				  }
+				});
+				Game.rooms[roomName].find(FIND_CONSTRUCTION_SITES).forEach(function(struct){
+					if(struct.structureType !== STRUCTURE_RAMPART && struct.structureType !== STRUCTURE_ROAD && struct.structureType !== STRUCTURE_CONTAINER)
+						costMatrix.set(struct.pos.x, struct.pos.y, 0xff);
+				});
+				Game.rooms[roomName].find(FIND_HOSTILE_CREEPS).forEach(function(c){
+					costMatrix.set(c.pos.x, c.pos.y, 0xff);
+				});
+				
+				var keepers = Game.rooms[roomName].find(FIND_HOSTILE_CREEPS, {filter: c => (c.owner.username === 'Source Keeper')});
+				if(keepers.length)
+				{
+					keepers.forEach(function(c){
+						for(var x = -4; x < 4; x++)
+						{
+							for(var y = -4; y < 4; y++)
+							{
+								costMatrix.set(c.pos.x + x, c.pos.y + y, 0xff);
+							}
+						}
+					});
+					Game.rooms[roomName].find(FIND_MINERALS).forEach(function(c){
+						for(var x = -4; x < 4; x++)
+						{
+							for(var y = -4; y < 4; y++)
+							{
+								costMatrix.set(c.pos.x + x, c.pos.y + y, 0xff);
+							}
+						}
+					});
+				}
+				var myCreeps = Game.rooms[roomName].find(FIND_MY_CREEPS, {filter: c => (c.name != self.name)});
+				for(var i in myCreeps)
+				{
+					if(myCreeps[i].AtLastPos() == true)
+						costMatrix.set(myCreeps[i].pos.x, myCreeps[i].pos.y, 0xff);
+				}
+			}
+			
+			return costMatrix;
+		}
+	}).path;
+	
+	return (path.length && path[path.length - 1].inRangeTo(singleTarget, 1) == true);
+}
 Creep.prototype.HasCivPath = function(singleTarget)
 {
-	if(singleTarget.pos)
+	if(singleTarget && singleTarget.pos)
 		singleTarget = singleTarget.pos;
-	return ( singleTarget.roomName != this.room.name || ( singleTarget.roomName == this.room.name && (Game.time % 10 != 0 || (Game.time % 10 == 0 && this.pos.findClosestByPath([singleTarget]))) ) );
+	return singleTarget && ( singleTarget.roomName != this.room.name || ( singleTarget.roomName == this.room.name && (Game.time % 10 != 0 || (Game.time % 10 == 0 && (this.pos.inRangeTo(singleTarget, 1) || (!this.pos.inRangeTo(singleTarget, 1) && this.CanMoveTo(singleTarget)) ) )) ) );
+}
+
+Creep.prototype.DumpAll = function(target)
+{
+	for(var type in this.store)
+	{
+		if(this.store[type] > 0)
+			this.transfer(target, type);
+	}
+}
+Creep.prototype.WithdrawAll = function(target)
+{
+	for(var type in target.store)
+	{
+		if(target.store[type] > 0)
+			creep.withdraw(target, type);
+	}
 }
 
 Creep.prototype.SayMultiple = function(textArray)

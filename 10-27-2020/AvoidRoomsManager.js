@@ -28,15 +28,9 @@ var AvoidRoomsManager =
 				this.civAvoidRooms[Game.rooms[i].name] = true;
 			else
 			{
-				var index = 0;
 				for(var a in this.civAvoidRooms)
 				{
-					if(i == this.civAvoidRooms[a])
-					{
-						this.civAvoidRooms.splice(index, 1);
-						index--;
-					}
-					index ++;
+					this.civAvoidRooms[i] = false;
 				}
 			}
 		}

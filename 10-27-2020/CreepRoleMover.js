@@ -1,4 +1,6 @@
 
+var alertManager = require("AlertManager");
+
 var creepRole = require("CreepRole");
 
 var CreepRoleMover = Object.create(creepRole);
@@ -28,7 +30,10 @@ CreepRoleMover.WorkTarget = function(creep)
 	target = null;
 	delete creep.memory.workTargetID;
 	
-	if(creep.room.terminal && creep.room.terminal.store[RESOURCE_ENERGY] < 200000)
+	if(alertManager.OnAlert(creep.room.name) == true)
+		target = creep.pos.findClosestByRange(FIND_STRUCTURES, {filter: s => (s.structureType === STRUCTURE_TOWER && s.energyCapacity - s.energy >= creep.store.getCapacity())});
+	
+	if(!target && creep.room.terminal && creep.room.terminal.store[RESOURCE_ENERGY] < 150000)
 		target = creep.room.terminal;
 	
 	if(target)
@@ -42,7 +47,7 @@ CreepRoleMover.Work = function(creep, target)
 {
     if(creep.pos.inRangeTo(target, 1))
     {
-        creep.transfer(target, RESOURCE_ENERGY);
+        creep.DumpAll(target);
     }else
     {
         creep.CivilianMove(target.pos, 1);
@@ -53,6 +58,8 @@ CreepRoleMover.OffTarget = function(creep)
 {
 	if(creep.room.storage && creep.room.storage.store[RESOURCE_ENERGY] >= 150000)
 		return creep.room.storage;
+	
+	//Set resource withdraw type
 	
 	return null;
 }
