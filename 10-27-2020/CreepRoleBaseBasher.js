@@ -44,16 +44,13 @@ CreepRoleBaseBasher.run = function(creep)
 }
 CreepRoleBaseBasher.WorkTarget = function(creep)
 {
-    var target = creep.pos.findClosestByPath(FIND_HOSTILE_STRUCTURES, {filter: s => s.structureType === STRUCTURE_TOWER});
-    
-    if(!target)
-        target = creep.pos.findClosestByPath(FIND_HOSTILE_CONSTRUCTION_SITES, {filter: s => (s.structureType === STRUCTURE_TOWER && s.progress >= 1000)});
-    
-    if(!target)
-        target = creep.pos.findClosestByRange(FIND_HOSTILE_STRUCTURES, {filter: s => (s.structureType != STRUCTURE_RAMPART && s.structureType != STRUCTURE_CONTROLLER)});
-    if(!target)
+	
+    target = creep.pos.findClosestByRange(FIND_HOSTILE_STRUCTURES, {filter: s => (s.structureType != STRUCTURE_RAMPART && s.structureType != STRUCTURE_CONTROLLER)});
+	
+	if(!target)
         target = creep.pos.findClosestByRange(FIND_HOSTILE_CREEPS);
-    if(creep.room.name == creep.memory.proxyTarget)
+    
+	if(creep.room.name == creep.memory.proxyTarget)
 	{
 		if(target)
 			creep.SayMultiple(['RAID!!!', 'CHARGE!', 'ATTACK!', 'KILL!!!']);
@@ -79,7 +76,7 @@ CreepRoleBaseBasher.Work = function(creep, target)
 	        creep.Demolish(targets[0]);
 	}
 	
-	if(target)
+	if(target && (!creep.room.controller || (creep.room.controller && !creep.room.controller.my)))
 	{
 	    if(target instanceof Structure)
             creep.Demolish(target);

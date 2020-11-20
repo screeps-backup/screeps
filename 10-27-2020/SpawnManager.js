@@ -69,14 +69,18 @@ var SpawnManager =
             }
             
         }
-        
-        if(safeToSpawnAll == true && spawn.room.find(FIND_MY_CREEPS, {filter: c => (c.memory.role == 'miner' && !this.DueToDie(c))}).length < spawn.room.find(FIND_SOURCES).length)
+		
+		var stopForMilitary = spawn.room.controller.level >= 4 && spawn.room.controller.level < 7 && spawn.room.storage && spawn.room.storage.store[RESOURCE_ENERGY] >= 125000 && Game.flags['BaseBash'] && spawn.room.find(FIND_MY_CREEPS, {filter: c => (c.memory.role == 'baseBasher')}).length > 0 && spawn.room.find(FIND_MY_CREEPS, {filter: c => (c.memory.role == 'baseBasher')}).length < spawn.room.find(FIND_MY_CREEPS, {filter: c => (c.memory.role == 'healer')}).length;
+		if(AlertManager.OnAlert(spawn.room.name) == true || (AlertManager.OnAlert(spawn.room.name) != true && spawn.room.find(FIND_HOSTILE_CREEPS, {filter: c => (c.body.length > 1)}).length))
+			stopForMilitary = false;
+		
+        if(stopForMilitary == false && safeToSpawnAll == true && spawn.room.find(FIND_MY_CREEPS, {filter: c => (c.memory.role == 'miner' && !this.DueToDie(c))}).length < spawn.room.find(FIND_SOURCES).length)
         {
             var minerBody = this.SelectBody(spawn.room.energyCapacityAvailable, minerBodies);
             this.SpawnCreep(spawn, 'miner', minerBody);
         }else
         {
-            if(safeToSpawnAll == true && spawn.room.find(FIND_MY_CREEPS, {filter: c => (c.memory.role == 'carrier' && !this.DueToDie(c))}).length < this.NumCarriers(spawn.room.name))
+            if(stopForMilitary == false && safeToSpawnAll == true && spawn.room.find(FIND_MY_CREEPS, {filter: c => (c.memory.role == 'carrier' && !this.DueToDie(c))}).length < this.NumCarriers(spawn.room.name))
             {
 			    var carrierBody = this.SelectBody(spawn.room.energyCapacityAvailable, normalCarrierBodies);
                 this.SpawnCreep(spawn, 'carrier', carrierBody);
@@ -92,7 +96,7 @@ var SpawnManager =
 						this.SpawnCreep(spawn, 'loader', [CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, MOVE, MOVE, MOVE, MOVE, MOVE, MOVE, MOVE, MOVE, MOVE, MOVE, MOVE, MOVE]);
                 }else
                 {
-                    if((safeToSpawnAll == true && ( ( !(spawn.room.storage && spawn.room.storage.store[RESOURCE_ENERGY] >= 200000) && spawn.room.find(FIND_MY_CREEPS, {filter: c => (c.memory.role == 'upgrader')}).length < 2) || ( (spawn.room.storage && spawn.room.storage.store[RESOURCE_ENERGY] >= 200000) && spawn.room.find(FIND_MY_CREEPS, {filter: c => (c.memory.role == 'upgrader')}).length < 3)) ) || (safeToSpawnAll != true && spawn.room.find(FIND_MY_CREEPS, {filter: c => (c.memory.role == 'upgrader')}).length < 1))
+                    if(stopForMilitary == false && ((safeToSpawnAll == true && ( ( !(spawn.room.storage && spawn.room.storage.store[RESOURCE_ENERGY] >= 200000) && spawn.room.find(FIND_MY_CREEPS, {filter: c => (c.memory.role == 'upgrader')}).length < 2) || ( (spawn.room.storage && spawn.room.storage.store[RESOURCE_ENERGY] >= 200000) && spawn.room.find(FIND_MY_CREEPS, {filter: c => (c.memory.role == 'upgrader')}).length < 3)) ) || (safeToSpawnAll != true && spawn.room.find(FIND_MY_CREEPS, {filter: c => (c.memory.role == 'upgrader')}).length < 1)))
                     {
 						if(spawn.room.controller.level >= 4 && spawn.room.energyCapacityAvailable >= 1300 && spawn.room.storage && spawn.room.storage.store[RESOURCE_ENERGY] >= 150000 && !Game.flags['BaseBash'])
 						{
@@ -103,7 +107,7 @@ var SpawnManager =
 							var upgraderBody = this.SelectBody(spawn.room.energyCapacityAvailable, normalUpgraderBodies);
 							this.SpawnCreep(spawn, 'upgrader', upgraderBody);
 						}
-                    }else
+                    }else if(stopForMilitary == false)
                     {
                         if(spawn.room.find(FIND_MY_CREEPS, {filter: c => (c.memory.role == 'builder')}).length < 1)
                         {

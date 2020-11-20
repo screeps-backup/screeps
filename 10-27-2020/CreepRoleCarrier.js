@@ -46,7 +46,7 @@ CreepRoleCarrier.WorkTarget = function(creep)
 		target = creep.pos.findClosestByRange(FIND_STRUCTURES, {filter: s => (s.structureType === STRUCTURE_CONTAINER && s.pos.findInRange(FIND_STRUCTURES, 1, {filter: a => (a.structureType === STRUCTURE_CONTROLLER)}).length > 0 && s.store.getFreeCapacity(RESOURCE_ENERGY) >= creep.store[RESOURCE_ENERGY] && (targetFull == true || (targetFull != true && creep.HasCivPath(s) == true)))});
     
     if(!target)
-        target = creep.pos.findClosestByRange(FIND_STRUCTURES, {filter: s => ((((s.structureType === STRUCTURE_CONTAINER && !s.pos.findInRange(FIND_SOURCES, 1).length) || s.structureType === STRUCTURE_STORAGE) && s.store.getFreeCapacity(RESOURCE_ENERGY) >= creep.store[RESOURCE_ENERGY]) && (targetFull == true || (targetFull != true && creep.HasCivPath(s) == true)))});
+        target = creep.pos.findClosestByRange(FIND_STRUCTURES, {filter: s => (s.isActive() == true && (((s.structureType === STRUCTURE_CONTAINER && !s.pos.findInRange(FIND_SOURCES, 1).length) || s.structureType === STRUCTURE_STORAGE) && s.store.getFreeCapacity(RESOURCE_ENERGY) >= creep.store[RESOURCE_ENERGY]) && (targetFull == true || (targetFull != true && creep.HasCivPath(s) == true)))});
     
         
     if(target)
@@ -122,7 +122,7 @@ CreepRoleCarrier.OffTarget = function(creep)
         
     if(!target)
     {
-        if(creep.room.storage && creep.room.storage.store[RESOURCE_ENERGY] >= 200000 && (targetEmpty == true || (targetEmpty != true && creep.HasCivPath(creep.room.storage) == true)))
+        if(creep.room.storage && creep.room.storage.isActive() == true && creep.room.storage.store[RESOURCE_ENERGY] >= 200000 && (targetEmpty == true || (targetEmpty != true && creep.HasCivPath(creep.room.storage) == true)))
             target = creep.room.storage;
     }
     

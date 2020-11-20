@@ -114,7 +114,7 @@ Creep.prototype.GetExitPos = function(exitDir)
 	}
 }
 const maxCivSearchRooms = 16;
-Creep.prototype.ProxyMoveDir = function(proxyTarget)
+Creep.prototype.ProxyMoveDir = function(proxyTarget, ignoreCivUnsafe=false)
 {
 	if((this.pos.x === 0 | this.pos.x === 49 | this.pos.y === 0 | this.pos.y === 49) != 0)
 	{
@@ -133,7 +133,7 @@ Creep.prototype.ProxyMoveDir = function(proxyTarget)
 		this.memory.mapCountdown--;
 	}else
 	{
-		if(Memory.avoidRoomNames.includes(proxyTarget) == false && avoidRoomsManager.civAvoidRooms[proxyTarget] != true)
+		if(Memory.avoidRoomNames.includes(proxyTarget) == false && (ignoreCivUnsafe == true || (ignoreCivUnsafe != true || avoidRoomsManager.civAvoidRooms[proxyTarget] != true)))
 		{
 			var startRoom = this.room.name;
 			var tryCount = 0;
@@ -143,7 +143,7 @@ Creep.prototype.ProxyMoveDir = function(proxyTarget)
 				if(tryCount > maxCivSearchRooms)
 					return 1;
 				
-				if(roomName != startRoom && roomName != proxyTarget && (avoidRoomsManager.civAvoidRooms[roomName] == true || (avoidRoomsManager.civAvoidRooms[roomName] != true && Memory.avoidRoomNames.includes(roomName)))) {    // avoid this room
+				if(roomName != startRoom && roomName != proxyTarget && ((avoidRoomsManager.civAvoidRooms[roomName] == true | ignoreCivUnsafe) != 0 || ((avoidRoomsManager.civAvoidRooms[roomName] == true | ignoreCivUnsafe) == 0 && Memory.avoidRoomNames.includes(roomName)))) {    // avoid this room
 					return maxCivSearchRooms + 1;
 				}
 				return 1;
@@ -458,7 +458,7 @@ Creep.prototype.CivilianMove = function(targetPos, range=0, maxSaveMoves=5)
     	            this.memory.civPath.shift();
 	  }
 }
-Creep.prototype.CivilianExitMove = function(targetRoomName=null)
+Creep.prototype.CivilianExitMove = function(targetRoomName=null, ignoreCivUnsafe=false)
 {
     if(!targetRoomName)
         targetRoomName = this.memory.proxyTarget;
@@ -477,7 +477,7 @@ Creep.prototype.CivilianExitMove = function(targetRoomName=null)
 	
 	if((!this.memory.civExitPos && this.pos.x != 49 && this.pos.x != 0 && this.pos.y != 49 && this.pos.y != 0) || (this.memory.civExitPos && this.HasCivPath(new RoomPosition(this.memory.civExitPos.x, this.memory.civExitPos.y, this.memory.civExitPos.roomName)) == false))
 	{
-	    moveDir = this.ProxyMoveDir(targetRoomName);
+	    moveDir = this.ProxyMoveDir(targetRoomName, ignoreCivUnsafe);
 	    this.memory.proxyExit = moveDir;
 		delete this.memory.civExitPos;
 	}

@@ -161,7 +161,7 @@ CreepRoleProxyCarrier.OffTarget = function(creep)
     if(target)
     {
         creep.memory.offTargetID = target.id;
-        return target
+        return target;
     }else
 	{
 		creep.AvoidEdges();

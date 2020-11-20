@@ -14,7 +14,7 @@ CreepRoleProxyDefender.run = function(creep)
 	
 	if(creep.memory.proxyTarget && creep.room.name !== creep.memory.proxyTarget)
 	{
-		creep.CivilianExitMove(creep.memory.proxyTarget);
+		creep.CivilianExitMove(creep.memory.proxyTarget, true);
     }else if(creep.memory.garrisoned !== false) 
     {
         creepRoleDefender.run.call(this, creep);

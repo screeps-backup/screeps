@@ -86,7 +86,7 @@ CreepRoleBuilder.OffTarget = function(creep)
         return target;
     
     delete creep.memory.offTargetID;
-    target = creep.pos.findClosestByRange(FIND_STRUCTURES, {filter: s => (((s.structureType === STRUCTURE_CONTAINER && !s.pos.findInRange(FIND_STRUCTURES, 1, {filter: a => a.structureType === STRUCTURE_CONTROLLER}).length) || s.structureType === STRUCTURE_STORAGE) && s.store[RESOURCE_ENERGY] >= creep.store.getFreeCapacity(RESOURCE_ENERGY))});
+    target = creep.pos.findClosestByRange(FIND_STRUCTURES, {filter: s => (s.isActive() == true && ((s.structureType === STRUCTURE_CONTAINER && !s.pos.findInRange(FIND_STRUCTURES, 1, {filter: a => a.structureType === STRUCTURE_CONTROLLER}).length) || s.structureType === STRUCTURE_STORAGE) && s.store[RESOURCE_ENERGY] >= creep.store.getFreeCapacity(RESOURCE_ENERGY))});
     
     if(!target && creep.room.find(FIND_MY_CREEPS, {filter: c => (c.memory.role === 'miner')}).length == 0)
         target = creep.pos.findClosestByPath(FIND_SOURCES);

@@ -1,3 +1,6 @@
+
+//Wall attack naming convention: WallAttack#, starting at 0
+
 var CreepBody = require('CreepBody');
 var spawnManager = require('SpawnManager');
 var OutpostManager = require('OutpostManager');
@@ -7,6 +10,7 @@ var defenderManager = require('DefenderManager');
 const maxBaseBashRemove = 9000;
 var baseBashCountdown = maxBaseBashRemove;
 
+const numBaseBashers = 4;
 var baseBasherBodies = [new CreepBody({numTough: 7, numMove: 20, numWork: 8, numAttack: 5}), new CreepBody({numTough: 4, numMove: 15, numWork: 6, numAttack: 5})];
 
 var BaseBasherManager = 
@@ -15,11 +19,16 @@ var BaseBasherManager =
     {
 		if(Game.flags['BaseBash'])
 		{
+			if(numWallAttack < numBaseBashers / 2)
+			{
+				console.log("NOT ENOUGH WALL FLAGS");
+				Game.flags['BaseBash'].remove();
+				return;
+			}
 			if(baseBashCountdown <= 0)
 				Game.flags['BaseBash'].remove();
 			else
 				baseBashCountdown--;
-				
 		}else
 		{
 			baseBashCountdown = maxBaseBashRemove;

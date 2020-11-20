@@ -103,7 +103,7 @@ CreepRoleProxyBuilder.OffTarget = function(creep)
     if(target && target.room.name == creep.room.name && ((target.store && target.store[RESOURCE_ENERGY] >= creep.store.getFreeCapacity(RESOURCE_ENERGY)) || (target.energy && target.energy > 0)) && creep.HasCivPath(target) == true)
         return target;
     
-    target = creep.pos.findClosestByRange(FIND_STRUCTURES, {filter: s => (((s.structureType === STRUCTURE_CONTAINER && !s.pos.findInRange(FIND_STRUCTURES, 1, {filter: a => a.structureType === STRUCTURE_CONTROLLER}).length) || s.structureType === STRUCTURE_STORAGE) && s.store[RESOURCE_ENERGY] >= creep.store.getFreeCapacity(RESOURCE_ENERGY) && creep.HasCivPath(s) == true)});
+    target = creep.pos.findClosestByRange(FIND_STRUCTURES, {filter: s => (s.isActive() == true && ((s.structureType === STRUCTURE_CONTAINER && !s.pos.findInRange(FIND_STRUCTURES, 1, {filter: a => a.structureType === STRUCTURE_CONTROLLER}).length) || s.structureType === STRUCTURE_STORAGE) && s.store[RESOURCE_ENERGY] >= creep.store.getFreeCapacity(RESOURCE_ENERGY) && creep.HasCivPath(s) == true)});
     
     if(target)
     {

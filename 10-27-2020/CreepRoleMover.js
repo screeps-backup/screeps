@@ -31,7 +31,10 @@ CreepRoleMover.WorkTarget = function(creep)
 	delete creep.memory.workTargetID;
 	
 	if(alertManager.OnAlert(creep.room.name) == true)
-		target = creep.pos.findClosestByRange(FIND_STRUCTURES, {filter: s => (s.structureType === STRUCTURE_TOWER && s.energyCapacity - s.energy >= creep.store.getCapacity())});
+		target = creep.pos.findClosestByRange(FIND_MY_STRUCTURES, {filter: s => (s.structureType === STRUCTURE_TOWER && s.energyCapacity - s.energy >= creep.store.getCapacity())});
+	
+	if(!target)
+		target = creep.pos.findClosestByRange(FIND_MY_STRUCTURES, {filter: s => (s.structureType === STRUCTURE_LAB && s.store.getFreeCapacity(RESOURCE_ENERGY) >= creep.store.getCapacity())});	
 	
 	if(!target && creep.room.terminal && creep.room.terminal.store[RESOURCE_ENERGY] < 150000)
 		target = creep.room.terminal;
