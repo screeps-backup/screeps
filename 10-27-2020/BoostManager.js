@@ -39,7 +39,11 @@ var BoostManager =
 {
 	run: function()
 	{
-		
+		for(var i in Game.rooms)
+		{
+			if(Game.rooms[i].controller && Game.rooms[i].controller.my && Game.rooms[i].terminal)
+				this.LoadMilitaryBodyBoosts(Game.rooms[i], [HEAL]);
+		}
 	},
 	BuyBoost: function(room, boostType, stockpileAmount)
 	{
@@ -115,6 +119,53 @@ var BoostManager =
 		}
 		
 		return true;
+	},
+	LoadBoost: function(room, boostName, boostAmount)
+	{
+		var mover = room.find(FIND_MY_CREEPS, {filter: c => (c.memory.role == 'mover')})[0] || null;
+		if(mover)
+		{
+			var labs = room.find(FIND_MY_STRUCTURES, {filter: s => (s.structureType === STRUCTURE_LAB)});
+			var boostTotal = 0;
+			for(var a in labs)
+			{
+				boostTotal += labs[a].store[boostName];
+			}
+			if(boostTotal < boostAmount)
+			{
+				mover.memory.loadType = boostName;
+				return false;
+			}
+		}
+		
+		return true;
+	},
+	LoadMilitaryBodyBoosts: function(room, body, level=4)
+	{
+		var boostParts = [];
+		for(var i in body)
+		{
+			if(body[i] != MOVE)
+			{
+				var boostName = body[i] in combatBoostTypes ? combatBoostTypes[body[i]] : body[i];
+				if(boostName in boostParts)
+					boostParts[boostName]++;
+				else
+					boostParts[boostName] = 1;
+			}
+		}
+		
+		var loadAmounts = [];
+		for(var i in boostParts)
+		{
+			loadAmounts[i] = boostParts[i] * 30;
+		}
+		
+		for(var i in loadAmounts)
+		{
+			if(this.LoadBoost(room, boostNames[i][level], loadAmounts[i]) == false)
+				return;
+		}
 	}
 }
 

@@ -70,7 +70,7 @@ var SpawnManager =
             
         }
 		
-		var stopForMilitary = spawn.room.controller.level >= 4 && spawn.room.controller.level < 7 && spawn.room.storage && spawn.room.storage.store[RESOURCE_ENERGY] >= 125000 && Game.flags['BaseBash'] && spawn.room.find(FIND_MY_CREEPS, {filter: c => (c.memory.role == 'baseBasher')}).length > 0 && spawn.room.find(FIND_MY_CREEPS, {filter: c => (c.memory.role == 'baseBasher')}).length < spawn.room.find(FIND_MY_CREEPS, {filter: c => (c.memory.role == 'healer')}).length;
+		var stopForMilitary = spawn.room.controller.level >= 4 && spawn.room.controller.level < 7 && spawn.room.storage !== undefined && spawn.room.storage.store[RESOURCE_ENERGY] >= 125000 && Game.flags['BaseBash'] !== undefined && spawn.room.find(FIND_MY_CREEPS, {filter: c => (c.memory.role == 'baseBasher')}).length > 0 && spawn.room.find(FIND_MY_CREEPS, {filter: c => (c.memory.role == 'baseBasher')}).length < spawn.room.find(FIND_MY_CREEPS, {filter: c => (c.memory.role == 'healer')}).length;
 		if(AlertManager.OnAlert(spawn.room.name) == true || (AlertManager.OnAlert(spawn.room.name) != true && spawn.room.find(FIND_HOSTILE_CREEPS, {filter: c => (c.body.length > 1)}).length))
 			stopForMilitary = false;
 		

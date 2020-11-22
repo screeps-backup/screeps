@@ -27,6 +27,8 @@ var MemoryManager =
 							delete Game.creeps[i].memory._move;
                             delete Game.creeps[i].memory.civPath;
                             delete Game.creeps[i].memory.targetPos;
+							delete Game.creeps[i].lastX;
+							delete Game.creeps[i].lastY;
 							Game.creeps[i].memory.toSet = false;
 						}else if(Game.creeps[i].memory.toSet != true && Game.creeps[i].memory.lastX && Game.creeps[i].memory.lastY)
 						{

@@ -319,6 +319,10 @@ Creep.prototype.Garrison = function(targetAllies, endProxyTarget)
 	
 	
 }
+Creep.prototype.MilitaryBoost = function(level=4)
+{
+	
+}
 
 var CreepRoleMilitary = Object.create(creepRole);
 //There's no need to check if your store is full since military units don't have one

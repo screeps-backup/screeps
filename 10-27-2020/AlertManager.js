@@ -220,14 +220,15 @@ var AlertManager =
 	    {
     	    if(room.storage)
     	    {
+				var terminalEnergy = room.terminal ? room.terminal.store[RESOURCE_ENERGY] : 0;
     	        if(this.previousStorageEnergy)
     	        {
-    	            Game.notify("Storage energy (" + room.name + "): " + this.previousStorageEnergy + " + " + (room.storage.store[RESOURCE_ENERGY] - this.previousStorageEnergy), 10);
-    	            this.previousStorageEnergy = room.storage.store[RESOURCE_ENERGY];
+    	            Game.notify("Storage energy (" + room.name + "): " + this.previousStorageEnergy + " + " + (room.storage.store[RESOURCE_ENERGY] + terminalEnergy - this.previousStorageEnergy), 10);
+    	            this.previousStorageEnergy = room.storage.store[RESOURCE_ENERGY] + terminalEnergy;
     	        }else
     	        {
-    	            Game.notify("Inital storage energy (" + room.name + "): " + room.storage.store[RESOURCE_ENERGY], 10);
-    	            this.previousStorageEnergy = room.storage.store[RESOURCE_ENERGY];
+    	            Game.notify("Inital storage energy (" + room.name + "): " + (room.storage.store[RESOURCE_ENERGY] + terminalEnergy), 10);
+    	            this.previousStorageEnergy = room.storage.store[RESOURCE_ENERGY] + terminalEnergy;
     	        }
     	    }else
     	    {
